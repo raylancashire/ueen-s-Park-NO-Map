@@ -98,6 +98,31 @@
       </div>
     </section>
 
+
+
+    <section class="site-history-section" aria-label="Single-location survey comparison chart">
+      <button id="site-history-toggle" class="comparison-toggle" type="button" aria-expanded="false" aria-controls="site-history-panel">
+        Show one location across all surveys
+      </button>
+      <div id="site-history-panel" class="comparison-panel" hidden>
+        <div class="site-history-heading">
+          <div>
+            <p class="panel-kicker">One monitoring location</p>
+            <h2 id="site-history-title">Results across all surveys</h2>
+            <p id="site-history-note">Choose a monitoring location to compare all available results through time.</p>
+          </div>
+          <div class="site-history-control">
+            <label for="site-history-select">Location</label>
+            <select id="site-history-select" aria-label="Select monitoring location"></select>
+          </div>
+        </div>
+        <div class="site-history-chart-wrap">
+          <canvas id="site-history-chart" aria-label="NO2 results for one monitoring location across all surveys"></canvas>
+        </div>
+        <p class="comparison-footnote">Bars use the same concentration colours as the map. The dashed line marks 40 µg/m³, the annual mean legal limit. Missing or unverified survey results are shown as gaps.</p>
+      </div>
+    </section>
+
     <footer class="page-footer">
       <span>Outdoor monitoring locations QP01–QP18</span>
       <span>Base map © OpenStreetMap contributors</span>

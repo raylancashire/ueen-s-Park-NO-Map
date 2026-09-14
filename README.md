@@ -80,5 +80,14 @@ Adds a dashed reference line at 40 µg/m³ to the location comparison chart, lab
 The location comparison chart now defaults to descending order (highest percentage of the 40 µg/m³ legal limit first). A Sort order switch lets viewers toggle between Descending and Ascending. Missing results remain at the bottom in either order.
 
 
-## v11 change indicators
+## v12 change indicators
 The comparison chart uses bold colour-coded change indicators: increases are shown in red with an upward arrow, decreases in green with a downward arrow, and unchanged results in neutral grey.
+
+
+### v12 fix
+Missing/no-result sites are now explicitly separated from sortable results and always appended to the bottom of the comparison chart in both descending and ascending modes.
+
+
+## Version 13
+
+Adds a second collapsible comparison chart for a single monitoring location across all survey rounds. Use the location selector, or click a map marker first and then open the chart. Bars follow the map concentration colours, gaps represent missing/unverified results, and a dashed reference line marks 40 µg/m³.

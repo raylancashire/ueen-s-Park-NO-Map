@@ -32,7 +32,12 @@ const els = {
   comparisonTitle: document.getElementById('comparison-title'),
   comparisonNote: document.getElementById('comparison-note'),
   sortToggle: document.getElementById('sort-toggle'),
-  sortDirection: document.getElementById('sort-direction')
+  sortDirection: document.getElementById('sort-direction'),
+  siteHistoryToggle: document.getElementById('site-history-toggle'),
+  siteHistoryPanel: document.getElementById('site-history-panel'),
+  siteHistoryTitle: document.getElementById('site-history-title'),
+  siteHistoryNote: document.getElementById('site-history-note'),
+  siteHistorySelect: document.getElementById('site-history-select')
 };
 
 let sites = [];
@@ -41,6 +46,7 @@ let surveyIndex = 0;
 let selectedSiteRef = null;
 let historyChart = null;
 let comparisonChart = null;
+let siteHistoryChart = null;
 let comparisonSort = 'desc';
 const markers = new Map();
 
@@ -246,8 +252,9 @@ function renderComparisonChart() {
     ? `Location in focus: ${focusedSite.site_ref} — ${focusedSite.location}. Locations are ranked from ${sortDescription} percentage of the 40 µg/m³ annual mean legal limit. Labels also show change from the previous survey.`
     : `Locations are ranked from ${sortDescription} percentage of the 40 µg/m³ annual mean legal limit. Labels also show change from the previous survey. Select a monitoring point on the map to highlight that location.`;
 
-  // Build one sortable row per monitoring location. Missing results are always placed last.
-  const rows = sites.map(site => {
+  // Build one row per monitoring location. Sort valid results only, then append
+  // missing results so they always stay at the bottom in both sort directions.
+  const allRows = sites.map(site => {
     const value = valueFor(site.site_ref);
     const previous = value === null ? null : previousComparable(surveyIndex, site.site_ref);
     return {
@@ -259,15 +266,22 @@ function renderComparisonChart() {
         : null,
       previousLabel: previous ? previous.survey.label : null
     };
-  }).sort((a, b) => {
-    if (a.legalPct === null && b.legalPct === null) return a.site.site_ref.localeCompare(b.site.site_ref);
-    if (a.legalPct === null) return 1;
-    if (b.legalPct === null) return -1;
-    return comparisonSort === 'desc' ? b.legalPct - a.legalPct : a.legalPct - b.legalPct;
   });
 
+  const validRows = allRows
+    .filter(row => Number.isFinite(row.legalPct))
+    .sort((a, b) => comparisonSort === 'desc'
+      ? b.legalPct - a.legalPct
+      : a.legalPct - b.legalPct);
+
+  const missingRows = allRows
+    .filter(row => !Number.isFinite(row.legalPct))
+    .sort((a, b) => a.site.site_ref.localeCompare(b.site.site_ref));
+
+  const rows = [...validRows, ...missingRows];
+
   const labels = rows.map(row => `${row.site.site_ref} — ${row.site.location}`);
-  const values = rows.map(row => row.value);
+  const values = rows.map(row => row.value === null ? 0 : row.value);
   const backgroundColors = rows.map(row => row.value === null ? '#b5bdc3' : colourFor(row.value));
   const borderColors = rows.map(row => row.site.site_ref === selectedSiteRef ? '#17222b' : '#ffffff');
   const borderWidths = rows.map(row => row.site.site_ref === selectedSiteRef ? 4 : 1);
@@ -414,7 +428,7 @@ function renderComparisonChart() {
   });
 }
 
-
+\nfunction renderSiteHistoryChart(siteRef = null) {\n  if (els.siteHistoryPanel.hidden) return;\n\n  const LEGAL_LIMIT = 40;\n  const chosenRef = siteRef || els.siteHistorySelect.value || selectedSiteRef || sites[0]?.site_ref;\n  const site = sites.find(s => s.site_ref === chosenRef);\n  if (!site) return;\n\n  if (els.siteHistorySelect.value !== site.site_ref) els.siteHistorySelect.value = site.site_ref;\n  els.siteHistoryTitle.textContent = `${site.site_ref} — ${site.location}`;\n  els.siteHistoryNote.textContent = 'All survey rounds are shown in chronological order. Missing or unverified results remain visible as gaps.';\n\n  const rows = surveys.map((survey, index) => {\n    const value = survey.status === 'verified' && typeof survey.results?.[site.site_ref] === 'number' && Number.isFinite(survey.results[site.site_ref])\n      ? survey.results[site.site_ref]\n      : null;\n    let changePct = null;\n    if (value !== null && index > 0) {\n      const prev = surveys[index - 1];\n      const prevValue = prev?.status === 'verified' && typeof prev.results?.[site.site_ref] === 'number' && Number.isFinite(prev.results[site.site_ref])\n        ? prev.results[site.site_ref]\n        : null;\n      if (prevValue !== null && prevValue !== 0) changePct = ((value - prevValue) / prevValue) * 100;\n    }\n    return { survey, value, changePct };\n  });\n\n  const labels = rows.map(row => row.survey.label.replace('June ', 'Jun ').replace('July ', 'Jul ').replace('December ', 'Dec '));\n  const values = rows.map(row => row.value);\n  const backgroundColors = rows.map(row => row.value === null ? '#b5bdc3' : colourFor(row.value));\n\n  const legalLimitLinePlugin = {\n    id: 'siteHistoryLegalLimitLine',\n    afterDraw(chart) {\n      const { ctx, chartArea, scales } = chart;\n      if (!chartArea || !scales.y) return;\n      const y = scales.y.getPixelForValue(LEGAL_LIMIT);\n      if (y < chartArea.top || y > chartArea.bottom) return;\n      ctx.save();\n      ctx.beginPath();\n      ctx.moveTo(chartArea.left, y);\n      ctx.lineTo(chartArea.right, y);\n      ctx.lineWidth = 2;\n      ctx.strokeStyle = '#202020';\n      ctx.setLineDash([6, 4]);\n      ctx.stroke();\n      ctx.setLineDash([]);\n      ctx.font = '600 12px system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif';\n      ctx.textAlign = 'right';\n      ctx.textBaseline = 'bottom';\n      ctx.fillStyle = '#202020';\n      ctx.fillText('40 µg/m³ legal limit', chartArea.right, y - 4);\n      ctx.restore();\n    }\n  };\n\n  const valueLabelsPlugin = {\n    id: 'siteHistoryValueLabels',\n    afterDatasetsDraw(chart) {\n      const { ctx, chartArea } = chart;\n      const meta = chart.getDatasetMeta(0);\n      ctx.save();\n      ctx.textAlign = 'center';\n      ctx.textBaseline = 'bottom';\n      ctx.font = '700 11px system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif';\n      rows.forEach((row, index) => {\n        if (row.value === null) return;\n        const bar = meta.data[index];\n        const label = `${formatNumber(row.value)}`;\n        const y = Math.max(chartArea.top + 12, bar.y - 5);\n        ctx.fillStyle = '#26343d';\n        ctx.fillText(label, bar.x, y);\n      });\n      ctx.restore();\n    }\n  };\n\n  const numericValues = values.filter(v => typeof v === 'number' && Number.isFinite(v));\n  const maxValue = numericValues.length ? Math.max(...numericValues) : LEGAL_LIMIT;\n  const suggestedMax = Math.max(LEGAL_LIMIT + 10, Math.ceil(maxValue * 1.25 / 5) * 5);\n\n  const canvas = document.getElementById('site-history-chart');\n  if (siteHistoryChart) siteHistoryChart.destroy();\n  siteHistoryChart = new Chart(canvas, {\n    type: 'bar',\n    plugins: [legalLimitLinePlugin, valueLabelsPlugin],\n    data: {\n      labels,\n      datasets: [{\n        label: 'NO₂ µg/m³',\n        data: values,\n        backgroundColor: backgroundColors,\n        borderColor: rows.map(row => row.value === null ? '#9aa4aa' : '#ffffff'),\n        borderWidth: 1,\n        borderSkipped: false\n      }]\n    },\n    options: {\n      responsive: true,\n      maintainAspectRatio: false,\n      interaction: { mode: 'nearest', intersect: true },\n      plugins: {\n        legend: { display: false },\n        tooltip: {\n          callbacks: {\n            label: ctx => {\n              const row = rows[ctx.dataIndex];\n              if (row.value === null) return row.survey.status === 'verified' ? 'No result' : 'Result not verified';\n              const parts = [\n                `${formatNumber(row.value)} µg/m³`,\n                `${formatNumber((row.value / LEGAL_LIMIT) * 100)}% of 40 µg/m³ legal limit`\n              ];\n              if (row.changePct !== null) {\n                const arrow = row.changePct < 0 ? '↓' : row.changePct > 0 ? '↑' : '→';\n                parts.push(`${arrow} ${row.changePct > 0 ? '+' : ''}${formatNumber(row.changePct)}% from immediately previous survey`);\n              }\n              return parts;\n            }\n          }\n        }\n      },\n      scales: {\n        y: { beginAtZero: true, suggestedMax, title: { display: true, text: 'NO₂ µg/m³' } },\n        x: { ticks: { maxRotation: 45, minRotation: 0 } }\n      }\n    }\n  });\n}\n\nfunction setupSiteHistoryComparison() {\n  sites.forEach(site => {\n    const option = document.createElement('option');\n    option.value = site.site_ref;\n    option.textContent = `${site.site_ref} — ${site.location}`;\n    els.siteHistorySelect.appendChild(option);\n  });\n\n  els.siteHistorySelect.addEventListener('change', () => {\n    renderSiteHistoryChart(els.siteHistorySelect.value);\n  });\n\n  els.siteHistoryToggle.addEventListener('click', () => {\n    const willOpen = els.siteHistoryPanel.hidden;\n    els.siteHistoryPanel.hidden = !willOpen;\n    els.siteHistoryToggle.setAttribute('aria-expanded', String(willOpen));\n    els.siteHistoryToggle.textContent = willOpen ? 'Hide one-location survey comparison' : 'Show one location across all surveys';\n    if (willOpen) {\n      const ref = selectedSiteRef || els.siteHistorySelect.value || sites[0]?.site_ref;\n      renderSiteHistoryChart(ref);\n      requestAnimationFrame(() => siteHistoryChart?.resize());\n    }\n  });\n}\n
 function setupSortToggle() {
   els.sortToggle.addEventListener('click', () => {
     comparisonSort = comparisonSort === 'desc' ? 'asc' : 'desc';
@@ -462,6 +476,8 @@ function selectSite(siteRef, openPopup = false) {
   renderChange(siteRef, value);
   renderChart(siteRef);
   renderComparisonChart();
+  if (els.siteHistorySelect) els.siteHistorySelect.value = siteRef;
+  renderSiteHistoryChart(siteRef);
   updateUrl();
 
   if (openPopup) entry.marker.openPopup();
@@ -501,6 +517,7 @@ Promise.all([
   buildSurveySelect();
   setupComparisonToggle();
   setupSortToggle();
+  setupSiteHistoryComparison();
 
   const bounds = [];
   sites.forEach(site => {
