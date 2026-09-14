@@ -41,7 +41,9 @@ const els = {
   siteHistorySurvey: document.getElementById('site-history-survey'),
   siteHistoryResult: document.getElementById('site-history-result'),
   siteHistoryLimitPct: document.getElementById('site-history-limit-pct'),
-  siteHistoryChange: document.getElementById('site-history-change')
+  siteHistoryChange: document.getElementById('site-history-change'),
+  worstTrendToggle: document.getElementById('worst-trend-toggle'),
+  worstTrendPanel: document.getElementById('worst-trend-panel')
 };
 
 let sites = [];
@@ -51,6 +53,7 @@ let selectedSiteRef = null;
 let historyChart = null;
 let comparisonChart = null;
 let siteHistoryChart = null;
+let worstTrendChart = null;
 let comparisonSort = 'desc';
 const markers = new Map();
 
@@ -646,6 +649,147 @@ function setupComparisonToggle() {
   });
 }
 
+
+function renderWorstTrendChart() {
+  if (!els.worstTrendPanel || els.worstTrendPanel.hidden) return;
+  const LEGAL_LIMIT = 40;
+
+  const rows = surveys.map((survey, index) => {
+    if (survey.status !== 'verified') return { survey, index, site: null, value: null, changePct: null };
+    let worst = null;
+    sites.forEach(site => {
+      const value = survey.results?.[site.site_ref];
+      if (typeof value !== 'number' || !Number.isFinite(value)) return;
+      if (!worst || value > worst.value) worst = { site, value };
+    });
+    return { survey, index, site: worst?.site || null, value: worst?.value ?? null, changePct: null };
+  });
+
+  let previousValid = null;
+  rows.forEach(row => {
+    if (row.value === null) return;
+    if (previousValid && previousValid.value !== 0) {
+      row.changePct = ((row.value - previousValid.value) / previousValid.value) * 100;
+    }
+    previousValid = row;
+  });
+
+  const labels = rows.map(row => row.survey.label.replace('June ', 'Jun ').replace('July ', 'Jul ').replace('December ', 'Dec '));
+  const values = rows.map(row => row.value);
+  const backgroundColors = rows.map(row => row.value === null ? '#b5bdc3' : colourFor(row.value));
+
+  const legalLimitLinePlugin = {
+    id: 'worstTrendLegalLimitLine',
+    afterDraw(chart) {
+      const { ctx, chartArea, scales } = chart;
+      if (!chartArea || !scales.y) return;
+      const y = scales.y.getPixelForValue(LEGAL_LIMIT);
+      if (y < chartArea.top || y > chartArea.bottom) return;
+      ctx.save();
+      ctx.beginPath();
+      ctx.moveTo(chartArea.left, y);
+      ctx.lineTo(chartArea.right, y);
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = '#202020';
+      ctx.setLineDash([6, 4]);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.font = '600 12px system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif';
+      ctx.textAlign = 'right';
+      ctx.textBaseline = 'bottom';
+      ctx.fillStyle = '#202020';
+      ctx.fillText('40 µg/m³ legal limit', chartArea.right, y - 4);
+      ctx.restore();
+    }
+  };
+
+  const labelsPlugin = {
+    id: 'worstTrendLabels',
+    afterDatasetsDraw(chart) {
+      const { ctx, chartArea } = chart;
+      const meta = chart.getDatasetMeta(0);
+      ctx.save();
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'bottom';
+      ctx.font = '700 11px system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif';
+      rows.forEach((row, i) => {
+        if (row.value === null || !row.site) return;
+        const bar = meta.data[i];
+        const y = Math.max(chartArea.top + 24, bar.y - 5);
+        ctx.fillStyle = '#26343d';
+        ctx.fillText(`${row.site.site_ref} · ${formatNumber(row.value)}`, bar.x, y);
+      });
+      ctx.restore();
+    }
+  };
+
+  const numericValues = values.filter(v => typeof v === 'number' && Number.isFinite(v));
+  const maxValue = numericValues.length ? Math.max(...numericValues) : LEGAL_LIMIT;
+  const suggestedMax = Math.max(LEGAL_LIMIT + 10, Math.ceil(maxValue * 1.25 / 5) * 5);
+
+  const canvas = document.getElementById('worst-trend-chart');
+  if (worstTrendChart) worstTrendChart.destroy();
+  worstTrendChart = new Chart(canvas, {
+    type: 'bar',
+    plugins: [legalLimitLinePlugin, labelsPlugin],
+    data: {
+      labels,
+      datasets: [{
+        label: 'Highest NO₂ result',
+        data: values,
+        backgroundColor: backgroundColors,
+        borderColor: rows.map(row => row.index === surveyIndex ? '#0d6b4f' : '#ffffff'),
+        borderWidth: rows.map(row => row.index === surveyIndex ? 4 : 1),
+        borderSkipped: false
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            title: items => rows[items[0]?.dataIndex]?.survey.label || '',
+            label: ctx => {
+              const row = rows[ctx.dataIndex];
+              if (row.value === null || !row.site) return row.survey.status === 'verified' ? 'No valid result' : 'Results awaiting verification';
+              const parts = [
+                `${row.site.site_ref} — ${row.site.location}`,
+                `${formatNumber(row.value)} µg/m³`,
+                `${formatNumber((row.value / LEGAL_LIMIT) * 100)}% of 40 µg/m³ legal limit`
+              ];
+              if (row.changePct !== null) {
+                const arrow = row.changePct < 0 ? '↓' : row.changePct > 0 ? '↑' : '→';
+                parts.push(`${arrow} ${row.changePct > 0 ? '+' : ''}${formatNumber(row.changePct)}% vs previous survey's highest result`);
+              }
+              return parts;
+            }
+          }
+        }
+      },
+      scales: {
+        y: { beginAtZero: true, suggestedMax, title: { display: true, text: 'Highest NO₂ result (µg/m³)' } },
+        x: { ticks: { maxRotation: 45, minRotation: 0 } }
+      }
+    }
+  });
+}
+
+function setupWorstTrendComparison() {
+  if (!els.worstTrendToggle || !els.worstTrendPanel) return;
+  els.worstTrendToggle.addEventListener('click', () => {
+    const willOpen = els.worstTrendPanel.hidden;
+    els.worstTrendPanel.hidden = !willOpen;
+    els.worstTrendToggle.setAttribute('aria-expanded', String(willOpen));
+    els.worstTrendToggle.textContent = willOpen ? 'Hide worst-performing location trend' : 'Show worst-performing location trend';
+    if (willOpen) {
+      renderWorstTrendChart();
+      requestAnimationFrame(() => worstTrendChart?.resize());
+    }
+  });
+}
+
 function selectSite(siteRef, openPopup = false) {
   const site = sites.find(s => s.site_ref === siteRef);
   const entry = markers.get(siteRef);
@@ -680,6 +824,7 @@ function setSurvey(index) {
   if (!els.siteHistoryPanel.hidden) updateSiteHistorySummary(els.siteHistorySelect.value || selectedSiteRef || sites[0]?.site_ref);
   updateSummary();
   renderComparisonChart();
+  renderWorstTrendChart();
   if (selectedSiteRef) selectSite(selectedSiteRef, false);
   else updateUrl();
 }
@@ -709,6 +854,7 @@ Promise.all([
   setupComparisonToggle();
   setupSortToggle();
   setupSiteHistoryComparison();
+  setupWorstTrendComparison();
 
   const bounds = [];
   sites.forEach(site => {

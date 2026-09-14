@@ -304,3 +304,5 @@ h1 { margin: 0; font-size: clamp(1.75rem, 4vw, 2.55rem); line-height: 1.08; }
 @media (max-width: 460px) {
   .site-history-summary { grid-template-columns: 1fr; }
 }
+
+.worst-trend-section { margin-top: 16px; }

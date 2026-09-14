@@ -141,6 +141,26 @@
       </div>
     </section>
 
+
+    <section class="worst-trend-section" aria-label="Worst-performing location by survey">
+      <button id="worst-trend-toggle" class="comparison-toggle" type="button" aria-expanded="false" aria-controls="worst-trend-panel">
+        Show worst-performing location trend
+      </button>
+      <div id="worst-trend-panel" class="comparison-panel" hidden>
+        <div class="comparison-heading">
+          <div>
+            <p class="panel-kicker">Survey trend</p>
+            <h2>Worst-performing location in each survey</h2>
+            <p>For each verified survey, this chart shows the monitoring location with the highest NO₂ concentration.</p>
+          </div>
+        </div>
+        <div class="site-history-chart-wrap">
+          <canvas id="worst-trend-chart" aria-label="Highest NO2 result and monitoring location in each survey"></canvas>
+        </div>
+        <p class="comparison-footnote">Bars use the same concentration colours as the map. Labels identify the site with the highest result in each survey. The dashed line marks 40 µg/m³, the annual mean legal limit. Pending surveys and surveys with no valid results are shown as gaps.</p>
+      </div>
+    </section>
+
     <footer class="page-footer">
       <span>Outdoor monitoring locations QP01–QP18</span>
       <span>Base map © OpenStreetMap contributors</span>

@@ -95,3 +95,7 @@ Adds a second collapsible comparison chart for a single monitoring location acro
 
 ## v15
 The one-location comparison panel now includes a visible snapshot for the selected survey: exact NO₂ result, percentage of the 40 µg/m³ limit, and percentage change from the immediately previous survey. Increases are red and decreases are green.
+
+## v16 — worst-performing location trend
+
+Adds a collapsible survey-trend chart showing the highest valid outdoor NO₂ result in each verified survey, identifying the QP site responsible, its percentage of the 40 µg/m³ limit, and the change versus the previous survey's highest result.
