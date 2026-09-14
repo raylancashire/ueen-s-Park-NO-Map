@@ -71,6 +71,25 @@
       </aside>
     </section>
 
+
+    <section class="comparison-section" aria-label="Location comparison chart">
+      <button id="comparison-toggle" class="comparison-toggle" type="button" aria-expanded="false" aria-controls="comparison-panel">
+        Show location comparison chart
+      </button>
+      <div id="comparison-panel" class="comparison-panel" hidden>
+        <div class="comparison-heading">
+          <div>
+            <p class="panel-kicker">Selected survey</p>
+            <h2 id="comparison-title">Location comparison</h2>
+            <p id="comparison-note">Select a monitoring point on the map to highlight that location in the chart.</p>
+          </div>
+        </div>
+        <div class="comparison-chart-wrap">
+          <canvas id="comparison-chart" aria-label="NO2 results by monitoring location"></canvas>
+        </div>
+      </div>
+    </section>
+
     <footer class="page-footer">
       <span>Outdoor monitoring locations QP01–QP18</span>
       <span>Base map © OpenStreetMap contributors</span>

@@ -26,7 +26,11 @@ const els = {
   summaryCount: document.getElementById('summary-count'),
   summaryMedian: document.getElementById('summary-median'),
   summaryLow: document.getElementById('summary-low'),
-  summaryHigh: document.getElementById('summary-high')
+  summaryHigh: document.getElementById('summary-high'),
+  comparisonToggle: document.getElementById('comparison-toggle'),
+  comparisonPanel: document.getElementById('comparison-panel'),
+  comparisonTitle: document.getElementById('comparison-title'),
+  comparisonNote: document.getElementById('comparison-note')
 };
 
 let sites = [];
@@ -34,6 +38,7 @@ let surveys = [];
 let surveyIndex = 0;
 let selectedSiteRef = null;
 let historyChart = null;
+let comparisonChart = null;
 const markers = new Map();
 
 function formatNumber(value, digits = 1) {
@@ -226,6 +231,76 @@ function renderChart(siteRef) {
   });
 }
 
+function renderComparisonChart() {
+  if (els.comparisonPanel.hidden) return;
+
+  const survey = currentSurvey();
+  els.comparisonTitle.textContent = `${survey.label} — all monitoring locations`;
+  const focusedSite = selectedSiteRef ? sites.find(s => s.site_ref === selectedSiteRef) : null;
+  els.comparisonNote.textContent = focusedSite
+    ? `Location in focus: ${focusedSite.site_ref} — ${focusedSite.location}`
+    : 'Select a monitoring point on the map to highlight that location in the chart.';
+
+  const labels = sites.map(site => `${site.site_ref} — ${site.location}`);
+  const values = sites.map(site => valueFor(site.site_ref));
+  const backgroundColors = values.map(v => v === null ? '#b5bdc3' : colourFor(v));
+  const borderColors = sites.map(site => site.site_ref === selectedSiteRef ? '#17222b' : '#ffffff');
+  const borderWidths = sites.map(site => site.site_ref === selectedSiteRef ? 4 : 1);
+
+  const canvas = document.getElementById('comparison-chart');
+  if (comparisonChart) comparisonChart.destroy();
+  comparisonChart = new Chart(canvas, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [{
+        label: 'NO₂ µg/m³',
+        data: values,
+        backgroundColor: backgroundColors,
+        borderColor: borderColors,
+        borderWidth: borderWidths,
+        borderSkipped: false
+      }]
+    },
+    options: {
+      indexAxis: 'y',
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode: 'nearest', intersect: true },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: ctx => ctx.raw === null ? 'No result' : `${formatNumber(ctx.raw)} µg/m³ (marker ${roundedResult(ctx.raw)})`
+          }
+        }
+      },
+      scales: {
+        x: {
+          beginAtZero: true,
+          title: { display: true, text: 'NO₂ concentration (µg/m³)' }
+        },
+        y: {
+          ticks: { autoSkip: false, font: { size: 11 } }
+        }
+      }
+    }
+  });
+}
+
+function setupComparisonToggle() {
+  els.comparisonToggle.addEventListener('click', () => {
+    const willOpen = els.comparisonPanel.hidden;
+    els.comparisonPanel.hidden = !willOpen;
+    els.comparisonToggle.setAttribute('aria-expanded', String(willOpen));
+    els.comparisonToggle.textContent = willOpen ? 'Hide location comparison chart' : 'Show location comparison chart';
+    if (willOpen) {
+      renderComparisonChart();
+      requestAnimationFrame(() => comparisonChart?.resize());
+    }
+  });
+}
+
 function selectSite(siteRef, openPopup = false) {
   const site = sites.find(s => s.site_ref === siteRef);
   const entry = markers.get(siteRef);
@@ -245,6 +320,7 @@ function selectSite(siteRef, openPopup = false) {
   els.resultValue.textContent = survey.status === 'pending' ? 'Pending' : value === null ? 'No result' : formatNumber(value);
   renderChange(siteRef, value);
   renderChart(siteRef);
+  renderComparisonChart();
   updateUrl();
 
   if (openPopup) entry.marker.openPopup();
@@ -255,6 +331,7 @@ function setSurvey(index) {
   updateSurveyControls();
   updateMarkers();
   updateSummary();
+  renderComparisonChart();
   if (selectedSiteRef) selectSite(selectedSiteRef, false);
   else updateUrl();
 }
@@ -281,6 +358,7 @@ Promise.all([
   sites = siteData;
   surveys = surveyData;
   buildSurveySelect();
+  setupComparisonToggle();
 
   const bounds = [];
   sites.forEach(site => {

@@ -57,3 +57,7 @@ Marker labels use standard rounding to the nearest whole number (for example 32.
 
 ## Missing results
 If a monitoring site has no usable result for a survey (for example a missing/lost tube, invalid result, or unverified data), its marker remains visible at the fixed site location but is shown as a grey marker with no number. The popup identifies the QP site and states that there is no valid result for that survey.
+
+
+## Version 6
+Adds a collapsible horizontal bar chart comparing all outdoor monitoring locations for the selected survey. The currently selected map location is shown as the location in focus and is highlighted with a stronger outline. Missing results remain visible as gaps/no result.
