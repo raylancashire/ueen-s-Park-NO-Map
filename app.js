@@ -43,7 +43,11 @@ const els = {
   siteHistoryLimitPct: document.getElementById('site-history-limit-pct'),
   siteHistoryChange: document.getElementById('site-history-change'),
   worstTrendToggle: document.getElementById('worst-trend-toggle'),
-  worstTrendPanel: document.getElementById('worst-trend-panel')
+  worstTrendPanel: document.getElementById('worst-trend-panel'),
+  siteTrendToggle: document.getElementById('site-trend-toggle'),
+  siteTrendPanel: document.getElementById('site-trend-panel'),
+  siteTrendSummary: document.getElementById('site-trend-summary'),
+  siteTrendBody: document.getElementById('site-trend-body')
 };
 
 let sites = [];
@@ -825,6 +829,7 @@ function setSurvey(index) {
   updateSummary();
   renderComparisonChart();
   renderWorstTrendChart();
+  renderSiteTrendAnalysis();
   if (selectedSiteRef) selectSite(selectedSiteRef, false);
   else updateUrl();
 }
@@ -844,6 +849,113 @@ function buildSurveySelect() {
   els.next.addEventListener('click', () => setSurvey(surveyIndex + 1));
 }
 
+
+
+function surveyDateValue(survey) {
+  const parts = String(survey.survey || '').split('-').map(Number);
+  const year = parts[0] || 2000;
+  const month = parts[1] || 1;
+  return Date.UTC(year, Math.max(0, month - 1), 15) / (365.2425 * 24 * 3600 * 1000);
+}
+
+function siteTrendMetrics(siteRef) {
+  const points = surveys
+    .filter(s => s.status === 'verified')
+    .map(s => ({ survey: s, value: valueFor(siteRef, surveys.indexOf(s)), x: surveyDateValue(s) }))
+    .filter(p => p.value !== null && Number.isFinite(Number(p.value)))
+    .map(p => ({ ...p, value: Number(p.value) }));
+
+  if (!points.length) return null;
+  const first = points[0], last = points.at(-1);
+  const previous = points.length > 1 ? points.at(-2) : null;
+  const overallPct = first.value ? ((last.value - first.value) / first.value) * 100 : null;
+  const recentPct = previous?.value ? ((last.value - previous.value) / previous.value) * 100 : null;
+  const values = points.map(p => p.value);
+  const meanY = values.reduce((a,b)=>a+b,0) / values.length;
+  let slope = 0;
+  if (points.length >= 2) {
+    const meanX = points.reduce((a,p)=>a+p.x,0) / points.length;
+    const numerator = points.reduce((a,p)=>a + (p.x-meanX)*(p.value-meanY),0);
+    const denominator = points.reduce((a,p)=>a + (p.x-meanX)**2,0);
+    slope = denominator ? numerator / denominator : 0;
+  }
+  const ratePctYear = meanY ? (slope / meanY) * 100 : 0;
+  let label, cls, arrow;
+  if (points.length < 2) { label='Insufficient data'; cls='trend-stable'; arrow='•'; }
+  else if (ratePctYear <= -5) { label='Strong improvement'; cls='trend-improve'; arrow='↓'; }
+  else if (ratePctYear < -2) { label='Moderate improvement'; cls='trend-improve'; arrow='↓'; }
+  else if (ratePctYear <= 2) { label='Broadly stable'; cls='trend-stable'; arrow='→'; }
+  else if (ratePctYear < 5) { label='Moderate deterioration'; cls='trend-worsen'; arrow='↑'; }
+  else { label='Strong deterioration'; cls='trend-worsen'; arrow='↑'; }
+  return { points, first, last, previous, overallPct, recentPct, min:Math.min(...values), max:Math.max(...values), ratePctYear, label, cls, arrow };
+}
+
+function pctText(v) {
+  if (v === null || !Number.isFinite(v)) return '—';
+  const sign = v > 0 ? '+' : '';
+  return `${sign}${formatNumber(v,1)}%`;
+}
+
+function renderSiteTrendAnalysis() {
+  if (!els.siteTrendPanel || els.siteTrendPanel.hidden) return;
+  const rows = sites.map(site => ({site, m:siteTrendMetrics(site.site_ref)}));
+  const improving = rows.filter(r => r.m && r.m.ratePctYear < -2).length;
+  const stable = rows.filter(r => r.m && r.m.ratePctYear >= -2 && r.m.ratePctYear <= 2).length;
+  const worsening = rows.filter(r => r.m && r.m.ratePctYear > 2).length;
+  const analysed = rows.filter(r => r.m && r.m.points.length >= 2).length;
+  els.siteTrendSummary.innerHTML = `
+    <div class="summary-card"><span>Sites analysed</span><strong>${analysed}</strong></div>
+    <div class="summary-card"><span>Improving</span><strong class="history-change-down">↓ ${improving}</strong></div>
+    <div class="summary-card"><span>Broadly stable</span><strong>${stable}</strong></div>
+    <div class="summary-card"><span>Worsening</span><strong class="history-change-up">↑ ${worsening}</strong></div>`;
+
+  els.siteTrendBody.innerHTML = '';
+  rows.forEach(({site,m}) => {
+    const tr=document.createElement('tr');
+    if (!m) {
+      tr.innerHTML=`<td class="trend-site">${site.site_ref}<small>${site.location}</small></td><td colspan="8">No valid results</td>`;
+    } else {
+      const limitPct=(m.last.value/40)*100;
+      const overallClass=m.overallPct>0?'history-change-up':m.overallPct<0?'history-change-down':'history-change-same';
+      const recentClass=m.recentPct>0?'history-change-up':m.recentPct<0?'history-change-down':'history-change-same';
+      const recentArrow=m.recentPct>0?'↑':m.recentPct<0?'↓':'→';
+      tr.innerHTML=`
+        <td class="trend-site">${site.site_ref}<small>${site.location}</small></td>
+        <td><span class="trend-badge ${m.cls}">${m.arrow} ${m.label}</span><br><small>${pctText(m.ratePctYear)}/yr</small></td>
+        <td class="trend-number">${m.points.length}</td>
+        <td class="trend-number">${formatNumber(m.first.value)}<br><small>${m.first.survey.label}</small></td>
+        <td class="trend-number">${formatNumber(m.last.value)}<br><small>${m.last.survey.label}</small></td>
+        <td class="trend-number ${overallClass}">${pctText(m.overallPct)}</td>
+        <td class="trend-number">${formatNumber(limitPct)}%</td>
+        <td class="trend-number ${recentClass}"><strong>${recentArrow} ${pctText(Math.abs(m.recentPct ?? 0))}</strong></td>
+        <td class="trend-number">${formatNumber(m.min)}–${formatNumber(m.max)}</td>`;
+    }
+    tr.addEventListener('click',()=>{
+      if (els.siteHistorySelect) els.siteHistorySelect.value=site.site_ref;
+      if (els.siteHistoryPanel) {
+        els.siteHistoryPanel.hidden=false;
+        els.siteHistoryToggle?.setAttribute('aria-expanded','true');
+        if (els.siteHistoryToggle) els.siteHistoryToggle.textContent='Hide one-location survey comparison';
+      }
+      selectSite(site.site_ref,false);
+      renderSiteHistoryChart(site.site_ref);
+      requestAnimationFrame(()=>document.getElementById('site-history-panel')?.scrollIntoView({behavior:'smooth',block:'start'}));
+    });
+    els.siteTrendBody.appendChild(tr);
+  });
+}
+
+function setupSiteTrendAnalysis() {
+  if (!els.siteTrendToggle || !els.siteTrendPanel) return;
+  els.siteTrendToggle.addEventListener('click',()=>{
+    const willOpen=els.siteTrendPanel.hidden;
+    els.siteTrendPanel.hidden=!willOpen;
+    els.siteTrendToggle.setAttribute('aria-expanded',String(willOpen));
+    els.siteTrendToggle.textContent=willOpen?'Hide site trend analysis':'Show site trend analysis';
+    if (willOpen) renderSiteTrendAnalysis();
+  });
+}
+
 Promise.all([
   fetch('data/sites.json').then(r => { if (!r.ok) throw new Error(`Unable to load monitoring sites (${r.status})`); return r.json(); }),
   fetch('data/results.json').then(r => { if (!r.ok) throw new Error(`Unable to load survey results (${r.status})`); return r.json(); })
@@ -855,6 +967,7 @@ Promise.all([
   setupSortToggle();
   setupSiteHistoryComparison();
   setupWorstTrendComparison();
+  setupSiteTrendAnalysis();
 
   const bounds = [];
   sites.forEach(site => {

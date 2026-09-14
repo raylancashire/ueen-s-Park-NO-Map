@@ -306,3 +306,25 @@ h1 { margin: 0; font-size: clamp(1.75rem, 4vw, 2.55rem); line-height: 1.08; }
 }
 
 .worst-trend-section { margin-top: 16px; }
+
+
+/* Long-term site trend analysis */
+.site-trend-section { margin-top: 16px; }
+.trend-summary { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:10px; margin:14px 0 18px; }
+.trend-summary .summary-card { min-height:72px; }
+.trend-table-wrap { overflow-x:auto; border:1px solid var(--border); border-radius:10px; }
+.trend-table { width:100%; border-collapse:collapse; min-width:980px; background:#fff; font-size:.88rem; }
+.trend-table th, .trend-table td { padding:10px 11px; border-bottom:1px solid var(--border); text-align:left; vertical-align:middle; }
+.trend-table th { position:sticky; top:0; background:#f4f7f8; color:var(--muted); font-size:.75rem; text-transform:uppercase; letter-spacing:.035em; z-index:1; }
+.trend-table tbody tr { cursor:pointer; }
+.trend-table tbody tr:hover { background:#f6fafc; }
+.trend-table tbody tr:last-child td { border-bottom:0; }
+.trend-site { font-weight:800; white-space:nowrap; }
+.trend-site small { display:block; max-width:220px; color:var(--muted); font-weight:500; white-space:normal; margin-top:2px; }
+.trend-badge { display:inline-block; padding:4px 7px; border-radius:999px; font-weight:800; white-space:nowrap; }
+.trend-improve { color:#15803d; background:#e9f7ee; }
+.trend-worsen { color:#c62828; background:#fdecec; }
+.trend-stable { color:#53616b; background:#eef2f4; }
+.trend-number { font-variant-numeric:tabular-nums; white-space:nowrap; }
+@media (max-width:760px){ .trend-summary{grid-template-columns:1fr 1fr;} }
+@media (max-width:460px){ .trend-summary{grid-template-columns:1fr;} }

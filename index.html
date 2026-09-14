@@ -161,6 +161,30 @@
       </div>
     </section>
 
+
+    <section class="site-trend-section" aria-label="Long-term trend analysis by monitoring site">
+      <button id="site-trend-toggle" class="comparison-toggle" type="button" aria-expanded="false" aria-controls="site-trend-panel">
+        Show site trend analysis
+      </button>
+      <div id="site-trend-panel" class="comparison-panel" hidden>
+        <div class="comparison-heading">
+          <div>
+            <p class="panel-kicker">Long-term analysis</p>
+            <h2>NO₂ trend by monitoring location</h2>
+            <p>Trend direction is estimated from all valid results using the actual survey dates. Missing and pending results are ignored.</p>
+          </div>
+        </div>
+        <div id="site-trend-summary" class="trend-summary" aria-label="Trend classification summary"></div>
+        <div class="trend-table-wrap">
+          <table class="trend-table">
+            <thead><tr><th>Site</th><th>Trend</th><th>Valid results</th><th>Earliest</th><th>Latest</th><th>Overall change</th><th>% of 40 limit</th><th>Recent change</th><th>Range</th></tr></thead>
+            <tbody id="site-trend-body"></tbody>
+          </table>
+        </div>
+        <p class="comparison-footnote">Classification uses a date-based linear trend, expressed relative to each site's mean concentration: strong improvement ≤ −5%/year; moderate improvement −5% to −2%/year; broadly stable −2% to +2%/year; moderate deterioration +2% to +5%/year; strong deterioration ≥ +5%/year. Click a site row to open its full survey history.</p>
+      </div>
+    </section>
+
     <footer class="page-footer">
       <span>Outdoor monitoring locations QP01–QP18</span>
       <span>Base map © OpenStreetMap contributors</span>
