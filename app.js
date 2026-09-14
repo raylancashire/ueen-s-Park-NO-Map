@@ -474,6 +474,34 @@ function renderSiteHistoryChart(siteRef = null) {
   const values = rows.map(row => row.value);
   const pointColors = rows.map(row => row.value === null ? '#b5bdc3' : colourFor(row.value));
 
+  // Linear least-squares trend using the actual survey dates, so irregular gaps
+  // between survey rounds are reflected in the calculated trend.
+  const datedValues = rows.map((row, index) => {
+    if (row.value === null) return null;
+    const [yearText, monthText = '01'] = row.survey.survey.split('-');
+    const year = Number(yearText);
+    const month = Number(monthText);
+    const x = year + (month - 1) / 12;
+    return { index, x, y: row.value };
+  }).filter(Boolean);
+
+  let trendValues = rows.map(() => null);
+  if (datedValues.length >= 2) {
+    const meanX = datedValues.reduce((sum, point) => sum + point.x, 0) / datedValues.length;
+    const meanY = datedValues.reduce((sum, point) => sum + point.y, 0) / datedValues.length;
+    const denominator = datedValues.reduce((sum, point) => sum + Math.pow(point.x - meanX, 2), 0);
+    const slope = denominator === 0 ? 0 : datedValues.reduce((sum, point) => sum + (point.x - meanX) * (point.y - meanY), 0) / denominator;
+    const intercept = meanY - slope * meanX;
+    const lastValidIndex = datedValues.at(-1).index;
+
+    trendValues = rows.map((row, index) => {
+      if (index > lastValidIndex) return null;
+      const [yearText, monthText = '01'] = row.survey.survey.split('-');
+      const x = Number(yearText) + (Number(monthText) - 1) / 12;
+      return intercept + slope * x;
+    });
+  }
+
   const legalLimitLinePlugin = {
     id: 'siteHistoryLegalLimitLine',
     afterDraw(chart) {
@@ -511,7 +539,7 @@ function renderSiteHistoryChart(siteRef = null) {
     data: {
       labels,
       datasets: [{
-        label: 'NO₂ µg/m³',
+        label: 'Measured NO₂',
         data: values,
         borderColor: '#43515a',
         borderWidth: 3,
@@ -522,6 +550,16 @@ function renderSiteHistoryChart(siteRef = null) {
         pointBorderWidth: 2,
         pointRadius: rows.map(row => row.value === null ? 0 : 6),
         pointHoverRadius: 8
+      }, {
+        label: 'Linear trend',
+        data: trendValues,
+        borderColor: '#111111',
+        borderWidth: 2,
+        borderDash: [8, 6],
+        tension: 0,
+        spanGaps: true,
+        pointRadius: 0,
+        pointHoverRadius: 0
       }]
     },
     options: {
@@ -529,10 +567,11 @@ function renderSiteHistoryChart(siteRef = null) {
       maintainAspectRatio: false,
       interaction: { mode: 'nearest', intersect: true },
       plugins: {
-        legend: { display: false },
+        legend: { display: true },
         tooltip: {
           callbacks: {
             label: ctx => {
+              if (ctx.datasetIndex === 1) return `Linear trend: ${formatNumber(ctx.raw)} µg/m³`;
               const row = rows[ctx.dataIndex];
               if (row.value === null) return row.survey.status === 'verified' ? 'No result' : 'Result not verified';
               const parts = [

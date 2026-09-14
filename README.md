@@ -103,3 +103,6 @@ Adds a collapsible survey-trend chart showing the highest valid outdoor NO₂ re
 
 ## v18
 The detailed multi-site trend table has been replaced with a simpler single-site trend chart. Choose QP01–QP18 from a dropdown to see its NO₂ results through time as a line chart, with concentration-coloured points, the 40 µg/m³ reference line, and tooltip details for percentage of the limit and change from the previous available survey.
+
+## v19
+Adds a dashed linear trend line to the selectable single-site trend chart. The regression uses the actual survey dates, so irregular gaps between survey rounds are reflected in the calculation. The trend line stops at the latest verified result and does not extrapolate into pending surveys.
