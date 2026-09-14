@@ -344,47 +344,7 @@ function renderComparisonChart() {
     }
   };
 
-  const siteHistoryLabelsPlugin = {
-    id: 'siteHistoryLabels',
-    afterDatasetsDraw(chart) {
-      const { ctx, chartArea } = chart;
-      const meta = chart.getDatasetMeta(0);
-      if (!meta || !chartArea) return;
 
-      meta.data.forEach((bar, index) => {
-        const row = rows[index];
-        if (!row || row.value === null) return;
-
-        const pctLimit = (row.value / LEGAL_LIMIT) * 100;
-        const props = bar.getProps(['x', 'y', 'base'], true);
-        const barTop = Math.min(props.y, props.base);
-        const barBottom = Math.max(props.y, props.base);
-
-        ctx.save();
-        ctx.textAlign = 'center';
-
-        // Percentage of the 40 µg/m³ annual mean limit, shown inside each bar.
-        ctx.font = '700 13px system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif';
-        ctx.textBaseline = 'middle';
-        ctx.fillStyle = row.value >= 42 ? '#ffffff' : '#111111';
-        const insideY = Math.min(barBottom - 14, Math.max(barTop + 18, barTop + (barBottom - barTop) * 0.55));
-        ctx.fillText(`${Math.round(pctLimit)}%`, props.x, insideY);
-
-        // Percentage change from the previous available survey, shown above the bar.
-        if (row.changePct !== null) {
-          const arrow = row.changePct < 0 ? '↓' : row.changePct > 0 ? '↑' : '→';
-          const sign = row.changePct > 0 ? '+' : '';
-          ctx.font = '800 13px system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif';
-          ctx.textBaseline = 'bottom';
-          ctx.fillStyle = row.changePct < 0 ? '#14833b' : row.changePct > 0 ? '#c62828' : '#5f6b73';
-          const labelY = Math.max(chartArea.top + 14, barTop - 7);
-          ctx.fillText(`${arrow} ${sign}${Math.round(row.changePct)}%`, props.x, labelY);
-        }
-
-        ctx.restore();
-      });
-    }
-  };
 
   const numericValues = values.filter(v => typeof v === 'number' && Number.isFinite(v));
   const maxValue = numericValues.length ? Math.max(...numericValues) : LEGAL_LIMIT;
@@ -516,6 +476,48 @@ function renderSiteHistoryChart(siteRef = null) {
   const labels = rows.map(row => row.survey.label.replace('June ', 'Jun ').replace('July ', 'Jul ').replace('December ', 'Dec '));
   const values = rows.map(row => row.value);
   const pointColors = rows.map(row => row.value === null ? '#b5bdc3' : colourFor(row.value));
+
+  const siteHistoryLabelsPlugin = {
+    id: 'siteHistoryLabels',
+    afterDatasetsDraw(chart) {
+      const { ctx, chartArea } = chart;
+      const meta = chart.getDatasetMeta(0);
+      if (!meta || !chartArea) return;
+
+      meta.data.forEach((bar, index) => {
+        const row = rows[index];
+        if (!row || row.value === null) return;
+
+        const pctLimit = (row.value / LEGAL_LIMIT) * 100;
+        const props = bar.getProps(['x', 'y', 'base'], true);
+        const barTop = Math.min(props.y, props.base);
+        const barBottom = Math.max(props.y, props.base);
+
+        ctx.save();
+        ctx.textAlign = 'center';
+
+        // Percentage of the 40 µg/m³ annual mean limit, shown inside each bar.
+        ctx.font = '700 13px system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif';
+        ctx.textBaseline = 'middle';
+        ctx.fillStyle = row.value >= 42 ? '#ffffff' : '#111111';
+        const insideY = Math.min(barBottom - 14, Math.max(barTop + 18, barTop + (barBottom - barTop) * 0.55));
+        ctx.fillText(`${Math.round(pctLimit)}%`, props.x, insideY);
+
+        // Percentage change from the previous available survey, shown above the bar.
+        if (row.changePct !== null) {
+          const arrow = row.changePct < 0 ? '↓' : row.changePct > 0 ? '↑' : '→';
+          const sign = row.changePct > 0 ? '+' : '';
+          ctx.font = '800 13px system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif';
+          ctx.textBaseline = 'bottom';
+          ctx.fillStyle = row.changePct < 0 ? '#14833b' : row.changePct > 0 ? '#c62828' : '#5f6b73';
+          const labelY = Math.max(chartArea.top + 14, barTop - 7);
+          ctx.fillText(`${arrow} ${sign}${Math.round(row.changePct)}%`, props.x, labelY);
+        }
+
+        ctx.restore();
+      });
+    }
+  };
 
   // Linear least-squares trend using the actual survey dates, so irregular gaps
   // between survey rounds are reflected in the calculated trend.
