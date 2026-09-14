@@ -70,3 +70,7 @@ The collapsible location comparison chart now shows, for each valid result:
 - the same details in the hover tooltip.
 
 A note explains that short diffusion-tube survey periods are not themselves an annual legal-compliance assessment.
+
+
+## v9 comparison chart
+Adds a dashed reference line at 40 µg/m³ to the location comparison chart, labelled as the legal-limit reference.

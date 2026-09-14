@@ -239,25 +239,34 @@ function renderComparisonChart() {
   els.comparisonTitle.textContent = `${survey.label} — all monitoring locations`;
   const focusedSite = selectedSiteRef ? sites.find(s => s.site_ref === selectedSiteRef) : null;
   els.comparisonNote.textContent = focusedSite
-    ? `Location in focus: ${focusedSite.site_ref} — ${focusedSite.location}. Labels show % of the 40 µg/m³ annual mean legal limit and change from the previous survey.`
-    : 'Labels show % of the 40 µg/m³ annual mean legal limit and change from the previous survey. Select a monitoring point on the map to highlight that location.';
+    ? `Location in focus: ${focusedSite.site_ref} — ${focusedSite.location}. Locations are ranked from highest to lowest percentage of the 40 µg/m³ annual mean legal limit. Labels also show change from the previous survey.`
+    : 'Locations are ranked from highest to lowest percentage of the 40 µg/m³ annual mean legal limit. Labels also show change from the previous survey. Select a monitoring point on the map to highlight that location.';
 
-  const labels = sites.map(site => `${site.site_ref} — ${site.location}`);
-  const values = sites.map(site => valueFor(site.site_ref));
-  const backgroundColors = values.map(v => v === null ? '#b5bdc3' : colourFor(v));
-  const borderColors = sites.map(site => site.site_ref === selectedSiteRef ? '#17222b' : '#ffffff');
-  const borderWidths = sites.map(site => site.site_ref === selectedSiteRef ? 4 : 1);
-
-  const metrics = sites.map((site, i) => {
-    const value = values[i];
-    if (value === null) return { legalPct: null, changePct: null, previousLabel: null };
-    const previous = previousComparable(surveyIndex, site.site_ref);
+  // Build one sortable row per monitoring location. Missing results are placed last.
+  const rows = sites.map(site => {
+    const value = valueFor(site.site_ref);
+    const previous = value === null ? null : previousComparable(surveyIndex, site.site_ref);
     return {
-      legalPct: (value / LEGAL_LIMIT) * 100,
-      changePct: previous && previous.value !== 0 ? ((value - previous.value) / previous.value) * 100 : null,
+      site,
+      value,
+      legalPct: value === null ? null : (value / LEGAL_LIMIT) * 100,
+      changePct: value !== null && previous && previous.value !== 0
+        ? ((value - previous.value) / previous.value) * 100
+        : null,
       previousLabel: previous ? previous.survey.label : null
     };
+  }).sort((a, b) => {
+    if (a.legalPct === null && b.legalPct === null) return a.site.site_ref.localeCompare(b.site.site_ref);
+    if (a.legalPct === null) return 1;
+    if (b.legalPct === null) return -1;
+    return b.legalPct - a.legalPct;
   });
+
+  const labels = rows.map(row => `${row.site.site_ref} — ${row.site.location}`);
+  const values = rows.map(row => row.value);
+  const backgroundColors = rows.map(row => row.value === null ? '#b5bdc3' : colourFor(row.value));
+  const borderColors = rows.map(row => row.site.site_ref === selectedSiteRef ? '#17222b' : '#ffffff');
+  const borderWidths = rows.map(row => row.site.site_ref === selectedSiteRef ? 4 : 1);
 
   const comparisonLabelsPlugin = {
     id: 'comparisonLabels',
@@ -268,15 +277,14 @@ function renderComparisonChart() {
       ctx.font = '600 11px system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
       ctx.textBaseline = 'middle';
       meta.data.forEach((bar, index) => {
-        const value = values[index];
-        if (value === null) return;
-        const m = metrics[index];
-        const limitText = `${Math.round(m.legalPct)}% of limit`;
+        const row = rows[index];
+        if (row.value === null) return;
+        const limitText = `${Math.round(row.legalPct)}% of limit`;
         let changeText = '— vs previous';
-        if (m.changePct !== null) {
-          const arrow = m.changePct < 0 ? '↓' : m.changePct > 0 ? '↑' : '→';
-          const sign = m.changePct > 0 ? '+' : '';
-          changeText = `${arrow} ${sign}${formatNumber(m.changePct)}%`;
+        if (row.changePct !== null) {
+          const arrow = row.changePct < 0 ? '↓' : row.changePct > 0 ? '↑' : '→';
+          const sign = row.changePct > 0 ? '+' : '';
+          changeText = `${arrow} ${sign}${formatNumber(row.changePct)}%`;
         }
         const text = `${limitText}  |  ${changeText}`;
         const x = Math.min(bar.x + 8, chartArea.right - ctx.measureText(text).width - 2);
@@ -291,11 +299,37 @@ function renderComparisonChart() {
   const maxValue = numericValues.length ? Math.max(...numericValues) : LEGAL_LIMIT;
   const suggestedMax = Math.max(LEGAL_LIMIT + 10, Math.ceil(maxValue * 1.55 / 5) * 5);
 
+  const legalLimitLinePlugin = {
+    id: 'legalLimitLine',
+    afterDraw(chart) {
+      const { ctx, chartArea, scales } = chart;
+      if (!chartArea || !scales.x) return;
+      const x = scales.x.getPixelForValue(LEGAL_LIMIT);
+      if (x < chartArea.left || x > chartArea.right) return;
+
+      ctx.save();
+      ctx.beginPath();
+      ctx.moveTo(x, chartArea.top);
+      ctx.lineTo(x, chartArea.bottom);
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = '#202020';
+      ctx.setLineDash([6, 4]);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.font = '600 12px system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'bottom';
+      ctx.fillStyle = '#202020';
+      ctx.fillText('40 µg/m³ legal limit', x, chartArea.top - 4);
+      ctx.restore();
+    }
+  };
+
   const canvas = document.getElementById('comparison-chart');
   if (comparisonChart) comparisonChart.destroy();
   comparisonChart = new Chart(canvas, {
     type: 'bar',
-    plugins: [comparisonLabelsPlugin],
+    plugins: [comparisonLabelsPlugin, legalLimitLinePlugin],
     data: {
       labels,
       datasets: [{
@@ -318,15 +352,15 @@ function renderComparisonChart() {
         tooltip: {
           callbacks: {
             label: ctx => {
-              if (ctx.raw === null) return 'No result';
-              const m = metrics[ctx.dataIndex];
+              const row = rows[ctx.dataIndex];
+              if (row.value === null) return 'No result';
               const parts = [
-                `${formatNumber(ctx.raw)} µg/m³ (marker ${roundedResult(ctx.raw)})`,
-                `${formatNumber(m.legalPct)}% of 40 µg/m³ legal limit`
+                `${formatNumber(row.value)} µg/m³ (marker ${roundedResult(row.value)})`,
+                `${formatNumber(row.legalPct)}% of 40 µg/m³ legal limit`
               ];
-              if (m.changePct !== null) {
-                const arrow = m.changePct < 0 ? '↓' : m.changePct > 0 ? '↑' : '→';
-                parts.push(`${arrow} ${m.changePct > 0 ? '+' : ''}${formatNumber(m.changePct)}% from ${m.previousLabel}`);
+              if (row.changePct !== null) {
+                const arrow = row.changePct < 0 ? '↓' : row.changePct > 0 ? '↑' : '→';
+                parts.push(`${arrow} ${row.changePct > 0 ? '+' : ''}${formatNumber(row.changePct)}% from ${row.previousLabel}`);
               } else {
                 parts.push('No comparable result in the previous survey');
               }
@@ -339,10 +373,10 @@ function renderComparisonChart() {
         x: {
           beginAtZero: true,
           suggestedMax,
-          title: { display: true, text: 'NO₂ concentration (µg/m³)' }
+          title: { display: true, text: 'NO₂ µg/m³' }
         },
         y: {
-          ticks: { autoSkip: false, font: { size: 11 } }
+          ticks: { autoSkip: false }
         }
       }
     }
