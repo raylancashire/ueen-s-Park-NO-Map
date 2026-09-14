@@ -65,8 +65,8 @@ function colourFor(value) {
 
 function markerIcon(siteRef, value) {
   const rounded = roundedResult(value);
-  const label = rounded === null ? siteRef.replace('QP', '') : rounded;
-  const title = rounded === null ? `${siteRef}: no result` : `${siteRef}: ${rounded} µg/m³ (rounded to nearest whole number)`;
+  const label = rounded === null ? '' : rounded;
+  const title = rounded === null ? `${siteRef}: no valid result for this survey` : `${siteRef}: ${rounded} µg/m³ (rounded to nearest whole number)`;
   return L.divIcon({
     className: '',
     html: `<div class="site-marker${rounded === null ? ' missing' : ''}" style="background:${colourFor(value)}" title="${title}">${label}</div>`,
@@ -100,7 +100,7 @@ function popupHtml(site) {
   const result = survey.status === 'pending'
     ? `<div class="popup-note">Results awaiting verification.</div>`
     : value === null
-      ? `<div class="popup-note">No result recorded for this survey.</div>`
+      ? `<div class="popup-note">No valid result for this survey.</div>`
       : `<div class="popup-result">${formatNumber(value)} µg/m³ <span class="popup-rounded">(marker ${roundedResult(value)})</span></div>`;
   return `<div class="popup-ref">${site.site_ref}</div><div class="popup-location">${site.location}</div>${result}`;
 }

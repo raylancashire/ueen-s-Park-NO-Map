@@ -1,4 +1,4 @@
-# Queen's Park NO₂ Monitoring Map — v2
+# Queen's Park NO₂ Monitoring Map — v5
 
 Interactive public Leaflet map for Queen's Park outdoor diffusion-tube monitoring sites QP01–QP18.
 
@@ -53,3 +53,7 @@ The same GitHub Pages URL can later be embedded on Webador and the Queen's Park 
 
 ## Marker rounding
 Marker labels use standard rounding to the nearest whole number (for example 32.4 → 32 and 32.5 → 33). Marker colours are based on that rounded value.
+
+
+## Missing results
+If a monitoring site has no usable result for a survey (for example a missing/lost tube, invalid result, or unverified data), its marker remains visible at the fixed site location but is shown as a grey marker with no number. The popup identifies the QP site and states that there is no valid result for that survey.
