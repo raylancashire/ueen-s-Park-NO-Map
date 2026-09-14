@@ -1,20 +1,110 @@
 [
-  {"site_ref":"QP01","location":"Queen's Park Gardens MUGA","lat":51.528492,"lon":-0.208868},
-  {"site_ref":"QP02","location":"Queen's Park Gardens Wildlife Area","lat":51.528098,"lon":-0.208734},
-  {"site_ref":"QP03","location":"Queen's Park Primary School","lat":51.527455,"lon":-0.207759},
-  {"site_ref":"QP04","location":"Outside Queen's Park Library","lat":51.526969,"lon":-0.210668},
-  {"site_ref":"QP05","location":"21 Beethoven Street","lat":51.531605,"lon":-0.209045},
-  {"site_ref":"QP06","location":"269 Kilburn Lane","lat":51.532525,"lon":-0.208802},
-  {"site_ref":"QP07","location":"205 Portnall Road","lat":51.531155,"lon":-0.204129},
-  {"site_ref":"QP08","location":"82 Bravington Road","lat":51.529109,"lon":-0.204382},
-  {"site_ref":"QP09","location":"Queen's Park Health Centre","lat":51.530477,"lon":-0.207836},
-  {"site_ref":"QP10","location":"133 Fifth Avenue","lat":51.531039,"lon":-0.211134},
-  {"site_ref":"QP11","location":"588 Harrow Road","lat":51.526387,"lon":-0.206240},
-  {"site_ref":"QP12","location":"119 Ilbert Street","lat":51.529120,"lon":-0.213132},
-  {"site_ref":"QP13","location":"Outside St Luke's Church","lat":51.532754,"lon":-0.203078},
-  {"site_ref":"QP14","location":"599 Harrow Road (St. John's Church)","lat":51.527956,"lon":-0.215780},
-  {"site_ref":"QP15","location":"36 Kilburn Lane / Ilbert Street","lat":51.529729,"lon":-0.215738},
-  {"site_ref":"QP16","location":"162 Sixth Avenue","lat":51.531660,"lon":-0.213347},
-  {"site_ref":"QP17","location":"536 Harrow Road","lat":51.525492,"lon":-0.203923},
-  {"site_ref":"QP18","location":"Shirland Road / Fernhead Road","lat":51.528636,"lon":-0.201458}
+  {
+    "site_ref": "QP01",
+    "location": "Queen's Park Gardens MUGA",
+    "lat": 51.528492,
+    "lon": -0.208868
+  },
+  {
+    "site_ref": "QP02",
+    "location": "Queen's Park Gardens Wildlife Area",
+    "lat": 51.528098,
+    "lon": -0.208734
+  },
+  {
+    "site_ref": "QP03",
+    "location": "Queen's Park Primary School",
+    "lat": 51.527455,
+    "lon": -0.207759
+  },
+  {
+    "site_ref": "QP04",
+    "location": "Outside Queen's Park Library",
+    "lat": 51.526969,
+    "lon": -0.210668
+  },
+  {
+    "site_ref": "QP05",
+    "location": "21 Beethoven Street",
+    "lat": 51.531605,
+    "lon": -0.209045
+  },
+  {
+    "site_ref": "QP06",
+    "location": "269 Kilburn Lane",
+    "lat": 51.532525,
+    "lon": -0.208802
+  },
+  {
+    "site_ref": "QP07",
+    "location": "205 Portnall Road",
+    "lat": 51.531155,
+    "lon": -0.204129
+  },
+  {
+    "site_ref": "QP08",
+    "location": "82 Bravington Road",
+    "lat": 51.529109,
+    "lon": -0.204382
+  },
+  {
+    "site_ref": "QP09",
+    "location": "Queen's Park Health Centre",
+    "lat": 51.530477,
+    "lon": -0.207836
+  },
+  {
+    "site_ref": "QP10",
+    "location": "133 Fifth Avenue",
+    "lat": 51.531039,
+    "lon": -0.211134
+  },
+  {
+    "site_ref": "QP11",
+    "location": "588 Harrow Road",
+    "lat": 51.526387,
+    "lon": -0.20624
+  },
+  {
+    "site_ref": "QP12",
+    "location": "119 Ilbert Street",
+    "lat": 51.52912,
+    "lon": -0.213132
+  },
+  {
+    "site_ref": "QP13",
+    "location": "Outside St Luke's Church",
+    "lat": 51.532754,
+    "lon": -0.203078
+  },
+  {
+    "site_ref": "QP14",
+    "location": "599 Harrow Road (St. John's Church)",
+    "lat": 51.527956,
+    "lon": -0.21578
+  },
+  {
+    "site_ref": "QP15",
+    "location": "36 Kilburn Lane / Ilbert Street",
+    "lat": 51.529729,
+    "lon": -0.215738
+  },
+  {
+    "site_ref": "QP16",
+    "location": "162 Sixth Avenue",
+    "lat": 51.53166,
+    "lon": -0.213347
+  },
+  {
+    "site_ref": "QP17",
+    "location": "536 Harrow Road",
+    "lat": 51.525492,
+    "lon": -0.203923
+  },
+  {
+    "site_ref": "QP18",
+    "location": "Shirland Road / Fernhead Road",
+    "lat": 51.528636,
+    "lon": -0.201458
+  }
 ]

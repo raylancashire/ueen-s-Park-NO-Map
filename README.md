@@ -1,35 +1,51 @@
-# Queen's Park NO₂ Monitoring Map
+# Queen's Park NO₂ Monitoring Map — v2
 
-Starter public map for Queen's Park outdoor diffusion-tube monitoring sites QP01–QP18.
+Interactive public Leaflet map for Queen's Park outdoor diffusion-tube monitoring sites QP01–QP18.
 
-## Files
-- `index.html` — page structure
-- `styles.css` — responsive styling
-- `app.js` — Leaflet map and marker behaviour
-- `data/sites.json` — verified master site references and coordinates
+## What's new in this version
 
-QP19 and QP20 are indoor monitors and are intentionally excluded from the public map.
+- Survey selector plus Previous / Next controls.
+- Marker colours update with the selected survey result.
+- Click a marker to see the current NO₂ result.
+- Automatic change from the immediately previous survey, in µg/m³ and percent.
+- Historical line chart for the selected site.
+- Survey summary showing number of results, median, lowest and highest.
+- Direct links can use `?site=QP04&survey=2025-06`.
+- QP19 and QP20 remain excluded because they are indoor monitors.
 
-## Preview locally
-Because the map loads `data/sites.json`, preview it through a simple local web server rather than opening `index.html` directly.
+## Data files
 
-For example:
+- `data/sites.json` — fixed verified master locations for QP01–QP18.
+- `data/results.json` — survey results keyed by QP site reference.
 
-```bash
-python3 -m http.server 8000
+Verified result rounds currently loaded:
+
+- June 2017
+- June 2018
+- June 2019
+- July 2021
+- June 2024
+- December 2024
+- June 2025
+
+December 2025 and June 2026 are included in the selector as **pending** only. The uploaded spreadsheets contain later sample references/dates but their NO₂ result column repeats earlier values, so those readings should be verified before public display.
+
+## Upload to GitHub
+
+Replace the existing repository files with the contents of this folder while preserving the structure:
+
+```text
+index.html
+styles.css
+app.js
+data/
+  sites.json
+  results.json
+README.md
 ```
 
-Then visit `http://localhost:8000`.
+GitHub Pages will update automatically after the commit is deployed.
 
-## GitHub Pages
-Upload all files preserving the folder structure, enable GitHub Pages for the repository, and use the published Pages URL in an iframe on Webador or the Queen's Park Community Council website.
+## Embed elsewhere
 
-## Direct site links
-The map already supports links such as:
-
-`?site=QP04`
-
-This opens the map at the selected monitoring point.
-
-## Next stage
-Add historical NO₂ results, survey navigation, previous-survey change calculations and a site time-series chart.
+The same GitHub Pages URL can later be embedded on Webador and the Queen's Park Community Council website with an iframe.

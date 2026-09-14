@@ -11,27 +11,65 @@
 <body>
   <main class="app-shell">
     <header class="page-header">
-      <div>
-        <p class="eyebrow">Queen's Park air quality monitoring</p>
-        <h1>NO₂ Monitoring Locations</h1>
-        <p class="intro">Select a monitoring point to view its site reference and location. Historical NO₂ results and charts will be added in the next stage.</p>
-      </div>
+      <p class="eyebrow">Queen's Park community air quality monitoring</p>
+      <h1>NO₂ Monitoring Map</h1>
+      <p class="intro">Choose a survey date, then select a monitoring point to see the result, change from the previous survey and the site's historical trend.</p>
     </header>
 
+    <section class="survey-toolbar" aria-label="Survey date controls">
+      <button id="prev-survey" class="nav-button" type="button">‹ Previous</button>
+      <div class="survey-title-wrap">
+        <label for="survey-select">Survey</label>
+        <select id="survey-select" aria-label="Select survey date"></select>
+        <span id="survey-status" class="survey-status"></span>
+      </div>
+      <button id="next-survey" class="nav-button" type="button">Next ›</button>
+    </section>
+
+    <section id="survey-summary" class="summary-grid" aria-live="polite">
+      <div class="summary-card"><span>Sites with results</span><strong id="summary-count">—</strong></div>
+      <div class="summary-card"><span>Median NO₂</span><strong id="summary-median">—</strong></div>
+      <div class="summary-card"><span>Lowest</span><strong id="summary-low">—</strong></div>
+      <div class="summary-card"><span>Highest</span><strong id="summary-high">—</strong></div>
+    </section>
+
     <section class="map-layout" aria-label="NO2 monitoring map">
-      <div id="map" role="application" aria-label="Interactive map of Queen's Park NO2 monitoring locations"></div>
+      <div class="map-card">
+        <div id="map" role="application" aria-label="Interactive map of Queen's Park NO2 monitoring locations"></div>
+        <div class="map-legend" aria-label="Map legend">
+          <strong>NO₂ µg/m³</strong>
+          <span><i class="swatch band-low"></i>&lt;20</span>
+          <span><i class="swatch band-mid"></i>20–29.9</span>
+          <span><i class="swatch band-high"></i>30–39.9</span>
+          <span><i class="swatch band-vhigh"></i>≥40</span>
+          <span><i class="swatch band-missing"></i>No result</span>
+          <small>Visual bands only; not regulatory classifications.</small>
+        </div>
+      </div>
+
       <aside id="site-panel" class="site-panel" aria-live="polite">
         <p class="panel-kicker">Selected monitoring site</p>
         <h2 id="panel-ref">Choose a marker</h2>
         <p id="panel-location">Click any numbered monitoring point on the map.</p>
+
+        <div id="result-panel" class="result-panel" hidden>
+          <div class="result-main">
+            <span id="result-survey" class="result-label"></span>
+            <strong id="result-value">—</strong>
+            <span class="unit">µg/m³</span>
+          </div>
+          <div id="change-box" class="change-box"></div>
+        </div>
+
+        <div id="chart-wrap" class="chart-wrap" hidden>
+          <h3>Historical results</h3>
+          <canvas id="history-chart" aria-label="Historical NO2 results chart"></canvas>
+        </div>
+
         <dl id="panel-coordinates" class="coordinates" hidden>
           <div><dt>Latitude</dt><dd id="panel-lat"></dd></div>
           <div><dt>Longitude</dt><dd id="panel-lon"></dd></div>
         </dl>
-        <div class="future-panel">
-          <strong>Next stage</strong>
-          <span>NO₂ result, change from previous survey and historical chart.</span>
-        </div>
       </aside>
     </section>
 
@@ -42,6 +80,7 @@
   </main>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
   <script src="app.js"></script>
 </body>
 </html>
