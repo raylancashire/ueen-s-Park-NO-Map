@@ -110,3 +110,7 @@ Adds a dashed linear trend line to the selectable single-site trend chart. The r
 
 ## v21 update
 The linear trend line on the selected-location bar chart is now drawn in front of the bars for better visibility.
+
+
+## v23 update
+The selectable site trend chart now labels each measured bar with the percentage of the 40 µg/m³ annual mean limit, and shows the percentage change from the previous available survey above the bar. Increases are shown with a bold red upward arrow and decreases with a bold green downward arrow.
