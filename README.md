@@ -91,3 +91,7 @@ Missing/no-result sites are now explicitly separated from sortable results and a
 ## Version 13
 
 Adds a second collapsible comparison chart for a single monitoring location across all survey rounds. Use the location selector, or click a map marker first and then open the chart. Bars follow the map concentration colours, gaps represent missing/unverified results, and a dashed reference line marks 40 µg/m³.
+
+
+## v15
+The one-location comparison panel now includes a visible snapshot for the selected survey: exact NO₂ result, percentage of the 40 µg/m³ limit, and percentage change from the immediately previous survey. Increases are red and decreases are green.

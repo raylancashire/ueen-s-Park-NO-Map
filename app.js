@@ -37,7 +37,11 @@ const els = {
   siteHistoryPanel: document.getElementById('site-history-panel'),
   siteHistoryTitle: document.getElementById('site-history-title'),
   siteHistoryNote: document.getElementById('site-history-note'),
-  siteHistorySelect: document.getElementById('site-history-select')
+  siteHistorySelect: document.getElementById('site-history-select'),
+  siteHistorySurvey: document.getElementById('site-history-survey'),
+  siteHistoryResult: document.getElementById('site-history-result'),
+  siteHistoryLimitPct: document.getElementById('site-history-limit-pct'),
+  siteHistoryChange: document.getElementById('site-history-change')
 };
 
 let sites = [];
@@ -429,6 +433,37 @@ function renderComparisonChart() {
 }
 
 
+function updateSiteHistorySummary(siteRef) {
+  const LEGAL_LIMIT = 40;
+  const survey = currentSurvey();
+  const value = valueFor(siteRef);
+
+  els.siteHistorySurvey.textContent = survey.label;
+  els.siteHistoryChange.className = '';
+
+  if (value === null) {
+    els.siteHistoryResult.textContent = survey.status === 'pending' ? 'Awaiting verification' : 'No result';
+    els.siteHistoryLimitPct.textContent = '—';
+    els.siteHistoryChange.textContent = '—';
+    return;
+  }
+
+  els.siteHistoryResult.textContent = `${formatNumber(value)} µg/m³`;
+  els.siteHistoryLimitPct.textContent = `${formatNumber((value / LEGAL_LIMIT) * 100)}%`;
+
+  const previous = previousComparable(surveyIndex, siteRef);
+  if (!previous || previous.value === 0) {
+    els.siteHistoryChange.textContent = surveyIndex === 0 ? 'First survey' : 'No comparable result';
+    return;
+  }
+
+  const diffPct = ((value - previous.value) / previous.value) * 100;
+  const arrow = diffPct < 0 ? '↓' : diffPct > 0 ? '↑' : '→';
+  const sign = diffPct > 0 ? '+' : '';
+  els.siteHistoryChange.textContent = `${arrow} ${sign}${formatNumber(diffPct)}%`;
+  els.siteHistoryChange.className = diffPct < 0 ? 'history-change-down' : diffPct > 0 ? 'history-change-up' : 'history-change-same';
+}
+
 function renderSiteHistoryChart(siteRef = null) {
   if (els.siteHistoryPanel.hidden) return;
 
@@ -440,6 +475,7 @@ function renderSiteHistoryChart(siteRef = null) {
   if (els.siteHistorySelect.value !== site.site_ref) els.siteHistorySelect.value = site.site_ref;
   els.siteHistoryTitle.textContent = `${site.site_ref} — ${site.location}`;
   els.siteHistoryNote.textContent = 'All survey rounds are shown in chronological order. Missing or unverified results remain visible as gaps.';
+  updateSiteHistorySummary(site.site_ref);
 
   const rows = surveys.map((survey, index) => {
     const value = survey.status === 'verified' && typeof survey.results?.[site.site_ref] === 'number' && Number.isFinite(survey.results[site.site_ref])
@@ -641,6 +677,7 @@ function setSurvey(index) {
   surveyIndex = Math.max(0, Math.min(index, surveys.length - 1));
   updateSurveyControls();
   updateMarkers();
+  if (!els.siteHistoryPanel.hidden) updateSiteHistorySummary(els.siteHistorySelect.value || selectedSiteRef || sites[0]?.site_ref);
   updateSummary();
   renderComparisonChart();
   if (selectedSiteRef) selectSite(selectedSiteRef, false);

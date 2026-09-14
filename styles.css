@@ -269,3 +269,38 @@ h1 { margin: 0; font-size: clamp(1.75rem, 4vw, 2.55rem); line-height: 1.08; }
   .site-history-control { width: 100%; min-width: 0; }
   .site-history-chart-wrap { height: 500px; }
 }
+
+
+/* Snapshot metrics for the one-location panel */
+.site-history-summary {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+  margin: 8px 0 18px;
+}
+.site-history-stat {
+  padding: 11px 12px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: #f8fafb;
+  display: grid;
+  gap: 4px;
+}
+.site-history-stat span {
+  color: var(--muted);
+  font-size: .76rem;
+  line-height: 1.25;
+}
+.site-history-stat strong {
+  font-size: 1rem;
+  font-variant-numeric: tabular-nums;
+}
+.history-change-up { color: #c62828; }
+.history-change-down { color: #15803d; }
+.history-change-same { color: #53616b; }
+@media (max-width: 760px) {
+  .site-history-summary { grid-template-columns: 1fr 1fr; }
+}
+@media (max-width: 460px) {
+  .site-history-summary { grid-template-columns: 1fr; }
+}

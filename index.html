@@ -116,6 +116,24 @@
             <select id="site-history-select" aria-label="Select monitoring location"></select>
           </div>
         </div>
+        <div id="site-history-summary" class="site-history-summary" aria-live="polite">
+          <div class="site-history-stat">
+            <span>Selected survey</span>
+            <strong id="site-history-survey">—</strong>
+          </div>
+          <div class="site-history-stat">
+            <span>NO₂ result</span>
+            <strong id="site-history-result">—</strong>
+          </div>
+          <div class="site-history-stat">
+            <span>% of 40 µg/m³ limit</span>
+            <strong id="site-history-limit-pct">—</strong>
+          </div>
+          <div class="site-history-stat">
+            <span>Change from previous survey</span>
+            <strong id="site-history-change">—</strong>
+          </div>
+        </div>
         <div class="site-history-chart-wrap">
           <canvas id="site-history-chart" aria-label="NO2 results for one monitoring location across all surveys"></canvas>
         </div>
