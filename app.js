@@ -534,23 +534,20 @@ function renderSiteHistoryChart(siteRef = null) {
   const canvas = document.getElementById('site-history-chart');
   if (siteHistoryChart) siteHistoryChart.destroy();
   siteHistoryChart = new Chart(canvas, {
-    type: 'line',
+    type: 'bar',
     plugins: [legalLimitLinePlugin],
     data: {
       labels,
       datasets: [{
+        type: 'bar',
         label: 'Measured NO₂',
         data: values,
-        borderColor: '#43515a',
-        borderWidth: 3,
-        tension: 0.18,
-        spanGaps: false,
-        pointBackgroundColor: pointColors,
-        pointBorderColor: '#ffffff',
-        pointBorderWidth: 2,
-        pointRadius: rows.map(row => row.value === null ? 0 : 6),
-        pointHoverRadius: 8
+        backgroundColor: pointColors,
+        borderColor: pointColors,
+        borderWidth: 1,
+        borderRadius: 4
       }, {
+        type: 'line',
         label: 'Linear trend',
         data: trendValues,
         borderColor: '#111111',
@@ -559,7 +556,8 @@ function renderSiteHistoryChart(siteRef = null) {
         tension: 0,
         spanGaps: true,
         pointRadius: 0,
-        pointHoverRadius: 0
+        pointHoverRadius: 0,
+        fill: false
       }]
     },
     options: {

@@ -8,7 +8,7 @@ Interactive public Leaflet map for Queen's Park outdoor diffusion-tube monitorin
 - Marker colours update with the selected survey result.
 - Click a marker to see the current NO₂ result.
 - Automatic change from the immediately previous survey, in µg/m³ and percent.
-- Historical line chart for the selected site.
+- Historical bar chart for the selected site.
 - Survey summary showing number of results, median, lowest and highest.
 - Direct links can use `?site=QP04&survey=2025-06`.
 - QP19 and QP20 remain excluded because they are indoor monitors.
@@ -102,7 +102,7 @@ Adds a collapsible survey-trend chart showing the highest valid outdoor NO₂ re
 
 
 ## v18
-The detailed multi-site trend table has been replaced with a simpler single-site trend chart. Choose QP01–QP18 from a dropdown to see its NO₂ results through time as a line chart, with concentration-coloured points, the 40 µg/m³ reference line, and tooltip details for percentage of the limit and change from the previous available survey.
+The detailed multi-site trend table has been replaced with a simpler single-site trend chart. Choose QP01–QP18 from a dropdown to see its NO₂ results through time as a bar chart, with concentration-coloured points, the 40 µg/m³ reference line, and tooltip details for percentage of the limit and change from the previous available survey.
 
-## v19
+## v20
 Adds a dashed linear trend line to the selectable single-site trend chart. The regression uses the actual survey dates, so irregular gaps between survey rounds are reflected in the calculation. The trend line stops at the latest verified result and does not extrapolate into pending surveys.
