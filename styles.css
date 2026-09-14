@@ -176,6 +176,13 @@ h1 { margin: 0; font-size: clamp(1.75rem, 4vw, 2.55rem); line-height: 1.08; }
 .comparison-chart-wrap { height: 610px; min-height: 460px; }
 .comparison-chart-wrap canvas { width: 100% !important; height: 100% !important; }
 
+.comparison-footnote {
+  margin: 12px 0 0;
+  color: var(--muted);
+  font-size: 0.82rem;
+  line-height: 1.45;
+}
+
 @media (max-width: 620px) {
   .comparison-panel { padding: 14px; }
   .comparison-chart-wrap { height: 720px; }

@@ -61,3 +61,12 @@ If a monitoring site has no usable result for a survey (for example a missing/lo
 
 ## Version 6
 Adds a collapsible horizontal bar chart comparing all outdoor monitoring locations for the selected survey. The currently selected map location is shown as the location in focus and is highlighted with a stronger outline. Missing results remain visible as gaps/no result.
+
+
+## v7 comparison chart
+The collapsible location comparison chart now shows, for each valid result:
+- the percentage of the 40 µg/m³ annual mean legal limit;
+- the percentage increase/decrease from the immediately previous survey;
+- the same details in the hover tooltip.
+
+A note explains that short diffusion-tube survey periods are not themselves an annual legal-compliance assessment.
