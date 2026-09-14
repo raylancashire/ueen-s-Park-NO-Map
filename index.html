@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Queen's Park NO₂ Monitoring Map</title>
+  <link rel="preconnect" href="https://unpkg.com" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <main class="app-shell">
+    <header class="page-header">
+      <div>
+        <p class="eyebrow">Queen's Park air quality monitoring</p>
+        <h1>NO₂ Monitoring Locations</h1>
+        <p class="intro">Select a monitoring point to view its site reference and location. Historical NO₂ results and charts will be added in the next stage.</p>
+      </div>
+    </header>
+
+    <section class="map-layout" aria-label="NO2 monitoring map">
+      <div id="map" role="application" aria-label="Interactive map of Queen's Park NO2 monitoring locations"></div>
+      <aside id="site-panel" class="site-panel" aria-live="polite">
+        <p class="panel-kicker">Selected monitoring site</p>
+        <h2 id="panel-ref">Choose a marker</h2>
+        <p id="panel-location">Click any numbered monitoring point on the map.</p>
+        <dl id="panel-coordinates" class="coordinates" hidden>
+          <div><dt>Latitude</dt><dd id="panel-lat"></dd></div>
+          <div><dt>Longitude</dt><dd id="panel-lon"></dd></div>
+        </dl>
+        <div class="future-panel">
+          <strong>Next stage</strong>
+          <span>NO₂ result, change from previous survey and historical chart.</span>
+        </div>
+      </aside>
+    </section>
+
+    <footer class="page-footer">
+      <span>Outdoor monitoring locations QP01–QP18</span>
+      <span>Base map © OpenStreetMap contributors</span>
+    </footer>
+  </main>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+  <script src="app.js"></script>
+</body>
+</html>
