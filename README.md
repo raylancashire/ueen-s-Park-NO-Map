@@ -114,3 +114,6 @@ The linear trend line on the selected-location bar chart is now drawn in front o
 
 ## v23 update
 The selectable site trend chart now labels each measured bar with the percentage of the 40 µg/m³ annual mean limit, and shows the percentage change from the previous available survey above the bar. Increases are shown with a bold red upward arrow and decreases with a bold green downward arrow.
+
+## v25 accessibility update
+Numeric labels now use automatic high-contrast text. Dark NO₂ colours use white text and lighter colours use dark text, based on WCAG-style relative luminance/contrast calculations. This applies to the site-trend bar labels and map marker numbers.

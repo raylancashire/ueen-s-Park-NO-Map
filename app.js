@@ -81,13 +81,28 @@ function colourFor(value) {
   return match ? match[1] : no2ColourScale.at(-1)[1];
 }
 
+
+function contrastTextColour(hex) {
+  const clean = String(hex || '').replace('#', '');
+  if (!/^[0-9a-fA-F]{6}$/.test(clean)) return '#111111';
+
+  const rgb = [0, 2, 4].map(i => parseInt(clean.slice(i, i + 2), 16) / 255);
+  const linear = rgb.map(c => c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4));
+  const luminance = 0.2126 * linear[0] + 0.7152 * linear[1] + 0.0722 * linear[2];
+
+  // Choose the text colour with the stronger WCAG contrast ratio.
+  const whiteContrast = 1.05 / (luminance + 0.05);
+  const blackContrast = (luminance + 0.05) / 0.05;
+  return whiteContrast >= blackContrast ? '#ffffff' : '#111111';
+}
+
 function markerIcon(siteRef, value) {
   const rounded = roundedResult(value);
   const label = rounded === null ? '' : rounded;
   const title = rounded === null ? `${siteRef}: no valid result for this survey` : `${siteRef}: ${rounded} µg/m³ (rounded to nearest whole number)`;
   return L.divIcon({
     className: '',
-    html: `<div class="site-marker${rounded === null ? ' missing' : ''}" style="background:${colourFor(value)}" title="${title}">${label}</div>`,
+    html: `<div class="site-marker${rounded === null ? ' missing' : ''}" style="background:${colourFor(value)};color:${rounded === null ? '#ffffff' : contrastTextColour(colourFor(value))}" title="${title}">${label}</div>`,
     iconSize: [38, 38],
     iconAnchor: [19, 19],
     popupAnchor: [0, -18]
@@ -499,7 +514,7 @@ function renderSiteHistoryChart(siteRef = null) {
         // Percentage of the 40 µg/m³ annual mean limit, shown inside each bar.
         ctx.font = '700 13px system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif';
         ctx.textBaseline = 'middle';
-        ctx.fillStyle = row.value >= 42 ? '#ffffff' : '#111111';
+        ctx.fillStyle = contrastTextColour(colourFor(row.value));
         const insideY = Math.min(barBottom - 14, Math.max(barTop + 18, barTop + (barBottom - barTop) * 0.55));
         ctx.fillText(`${Math.round(pctLimit)}%`, props.x, insideY);
 
