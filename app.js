@@ -30,7 +30,9 @@ const els = {
   comparisonToggle: document.getElementById('comparison-toggle'),
   comparisonPanel: document.getElementById('comparison-panel'),
   comparisonTitle: document.getElementById('comparison-title'),
-  comparisonNote: document.getElementById('comparison-note')
+  comparisonNote: document.getElementById('comparison-note'),
+  sortToggle: document.getElementById('sort-toggle'),
+  sortDirection: document.getElementById('sort-direction')
 };
 
 let sites = [];
@@ -39,6 +41,7 @@ let surveyIndex = 0;
 let selectedSiteRef = null;
 let historyChart = null;
 let comparisonChart = null;
+let comparisonSort = 'desc';
 const markers = new Map();
 
 function formatNumber(value, digits = 1) {
@@ -238,11 +241,12 @@ function renderComparisonChart() {
   const survey = currentSurvey();
   els.comparisonTitle.textContent = `${survey.label} — all monitoring locations`;
   const focusedSite = selectedSiteRef ? sites.find(s => s.site_ref === selectedSiteRef) : null;
+  const sortDescription = comparisonSort === 'desc' ? 'highest to lowest' : 'lowest to highest';
   els.comparisonNote.textContent = focusedSite
-    ? `Location in focus: ${focusedSite.site_ref} — ${focusedSite.location}. Locations are ranked from highest to lowest percentage of the 40 µg/m³ annual mean legal limit. Labels also show change from the previous survey.`
-    : 'Locations are ranked from highest to lowest percentage of the 40 µg/m³ annual mean legal limit. Labels also show change from the previous survey. Select a monitoring point on the map to highlight that location.';
+    ? `Location in focus: ${focusedSite.site_ref} — ${focusedSite.location}. Locations are ranked from ${sortDescription} percentage of the 40 µg/m³ annual mean legal limit. Labels also show change from the previous survey.`
+    : `Locations are ranked from ${sortDescription} percentage of the 40 µg/m³ annual mean legal limit. Labels also show change from the previous survey. Select a monitoring point on the map to highlight that location.`;
 
-  // Build one sortable row per monitoring location. Missing results are placed last.
+  // Build one sortable row per monitoring location. Missing results are always placed last.
   const rows = sites.map(site => {
     const value = valueFor(site.site_ref);
     const previous = value === null ? null : previousComparable(surveyIndex, site.site_ref);
@@ -259,7 +263,7 @@ function renderComparisonChart() {
     if (a.legalPct === null && b.legalPct === null) return a.site.site_ref.localeCompare(b.site.site_ref);
     if (a.legalPct === null) return 1;
     if (b.legalPct === null) return -1;
-    return b.legalPct - a.legalPct;
+    return comparisonSort === 'desc' ? b.legalPct - a.legalPct : a.legalPct - b.legalPct;
   });
 
   const labels = rows.map(row => `${row.site.site_ref} — ${row.site.location}`);
@@ -274,22 +278,49 @@ function renderComparisonChart() {
       const { ctx, chartArea } = chart;
       const meta = chart.getDatasetMeta(0);
       ctx.save();
-      ctx.font = '600 11px system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
       ctx.textBaseline = 'middle';
       meta.data.forEach((bar, index) => {
         const row = rows[index];
         if (row.value === null) return;
+
         const limitText = `${Math.round(row.legalPct)}% of limit`;
-        let changeText = '— vs previous';
+        let arrow = '→';
+        let changeValueText = '— vs previous';
+        let changeColour = '#53616b';
+
         if (row.changePct !== null) {
-          const arrow = row.changePct < 0 ? '↓' : row.changePct > 0 ? '↑' : '→';
+          arrow = row.changePct < 0 ? '↓' : row.changePct > 0 ? '↑' : '→';
           const sign = row.changePct > 0 ? '+' : '';
-          changeText = `${arrow} ${sign}${formatNumber(row.changePct)}%`;
+          changeValueText = `${sign}${formatNumber(row.changePct)}%`;
+          changeColour = row.changePct < 0 ? '#15803d' : row.changePct > 0 ? '#c62828' : '#53616b';
         }
-        const text = `${limitText}  |  ${changeText}`;
-        const x = Math.min(bar.x + 8, chartArea.right - ctx.measureText(text).width - 2);
+
+        ctx.font = '600 11px system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+        const limitWidth = ctx.measureText(limitText).width;
+        const separator = '  |  ';
+        const separatorWidth = ctx.measureText(separator).width;
+
+        ctx.font = '800 15px system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+        const arrowWidth = ctx.measureText(arrow).width;
+        ctx.font = '700 11px system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+        const changeWidth = ctx.measureText(` ${changeValueText}`).width;
+        const totalWidth = limitWidth + separatorWidth + arrowWidth + changeWidth;
+        let x = Math.min(bar.x + 8, chartArea.right - totalWidth - 2);
+
+        ctx.font = '600 11px system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
         ctx.fillStyle = '#26343d';
-        ctx.fillText(text, x, bar.y);
+        ctx.fillText(limitText, x, bar.y);
+        x += limitWidth;
+        ctx.fillStyle = '#7a858c';
+        ctx.fillText(separator, x, bar.y);
+        x += separatorWidth;
+
+        ctx.font = '800 15px system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+        ctx.fillStyle = changeColour;
+        ctx.fillText(arrow, x, bar.y);
+        x += arrowWidth;
+        ctx.font = '700 11px system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+        ctx.fillText(` ${changeValueText}`, x, bar.y);
       });
       ctx.restore();
     }
@@ -383,6 +414,21 @@ function renderComparisonChart() {
   });
 }
 
+
+function setupSortToggle() {
+  els.sortToggle.addEventListener('click', () => {
+    comparisonSort = comparisonSort === 'desc' ? 'asc' : 'desc';
+    const descending = comparisonSort === 'desc';
+    els.sortDirection.textContent = descending ? 'Descending' : 'Ascending';
+    els.sortToggle.querySelector('.sort-arrow').textContent = descending ? '↓' : '↑';
+    els.sortToggle.setAttribute('aria-pressed', String(!descending));
+    els.sortToggle.setAttribute('aria-label', descending
+      ? 'Sort order descending. Click to switch to ascending.'
+      : 'Sort order ascending. Click to switch to descending.');
+    renderComparisonChart();
+  });
+}
+
 function setupComparisonToggle() {
   els.comparisonToggle.addEventListener('click', () => {
     const willOpen = els.comparisonPanel.hidden;
@@ -454,6 +500,7 @@ Promise.all([
   surveys = surveyData;
   buildSurveySelect();
   setupComparisonToggle();
+  setupSortToggle();
 
   const bounds = [];
   sites.forEach(site => {

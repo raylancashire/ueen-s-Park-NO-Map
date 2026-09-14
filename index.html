@@ -83,6 +83,13 @@
             <h2 id="comparison-title">Location comparison</h2>
             <p id="comparison-note">Select a monitoring point on the map to highlight that location in the chart.</p>
           </div>
+          <div class="sort-control" aria-label="Comparison chart sort order">
+            <span class="sort-label">Sort order</span>
+            <button id="sort-toggle" class="sort-toggle" type="button" aria-pressed="false">
+              <span id="sort-direction">Descending</span>
+              <span class="sort-arrow" aria-hidden="true">↓</span>
+            </button>
+          </div>
         </div>
         <div class="comparison-chart-wrap">
           <canvas id="comparison-chart" aria-label="NO2 results by monitoring location"></canvas>

@@ -74,3 +74,11 @@ A note explains that short diffusion-tube survey periods are not themselves an a
 
 ## v9 comparison chart
 Adds a dashed reference line at 40 µg/m³ to the location comparison chart, labelled as the legal-limit reference.
+
+
+## v10 update
+The location comparison chart now defaults to descending order (highest percentage of the 40 µg/m³ legal limit first). A Sort order switch lets viewers toggle between Descending and Ascending. Missing results remain at the bottom in either order.
+
+
+## v11 change indicators
+The comparison chart uses bold colour-coded change indicators: increases are shown in red with an upward arrow, decreases in green with a downward arrow, and unchanged results in neutral grey.
