@@ -38,16 +38,8 @@ const els = {
   siteHistoryTitle: document.getElementById('site-history-title'),
   siteHistoryNote: document.getElementById('site-history-note'),
   siteHistorySelect: document.getElementById('site-history-select'),
-  siteHistorySurvey: document.getElementById('site-history-survey'),
-  siteHistoryResult: document.getElementById('site-history-result'),
-  siteHistoryLimitPct: document.getElementById('site-history-limit-pct'),
-  siteHistoryChange: document.getElementById('site-history-change'),
   worstTrendToggle: document.getElementById('worst-trend-toggle'),
-  worstTrendPanel: document.getElementById('worst-trend-panel'),
-  siteTrendToggle: document.getElementById('site-trend-toggle'),
-  siteTrendPanel: document.getElementById('site-trend-panel'),
-  siteTrendSummary: document.getElementById('site-trend-summary'),
-  siteTrendBody: document.getElementById('site-trend-body')
+  worstTrendPanel: document.getElementById('worst-trend-panel')
 };
 
 let sites = [];
@@ -440,37 +432,6 @@ function renderComparisonChart() {
 }
 
 
-function updateSiteHistorySummary(siteRef) {
-  const LEGAL_LIMIT = 40;
-  const survey = currentSurvey();
-  const value = valueFor(siteRef);
-
-  els.siteHistorySurvey.textContent = survey.label;
-  els.siteHistoryChange.className = '';
-
-  if (value === null) {
-    els.siteHistoryResult.textContent = survey.status === 'pending' ? 'Awaiting verification' : 'No result';
-    els.siteHistoryLimitPct.textContent = '—';
-    els.siteHistoryChange.textContent = '—';
-    return;
-  }
-
-  els.siteHistoryResult.textContent = `${formatNumber(value)} µg/m³`;
-  els.siteHistoryLimitPct.textContent = `${formatNumber((value / LEGAL_LIMIT) * 100)}%`;
-
-  const previous = previousComparable(surveyIndex, siteRef);
-  if (!previous || previous.value === 0) {
-    els.siteHistoryChange.textContent = surveyIndex === 0 ? 'First survey' : 'No comparable result';
-    return;
-  }
-
-  const diffPct = ((value - previous.value) / previous.value) * 100;
-  const arrow = diffPct < 0 ? '↓' : diffPct > 0 ? '↑' : '→';
-  const sign = diffPct > 0 ? '+' : '';
-  els.siteHistoryChange.textContent = `${arrow} ${sign}${formatNumber(diffPct)}%`;
-  els.siteHistoryChange.className = diffPct < 0 ? 'history-change-down' : diffPct > 0 ? 'history-change-up' : 'history-change-same';
-}
-
 function renderSiteHistoryChart(siteRef = null) {
   if (els.siteHistoryPanel.hidden) return;
 
@@ -481,27 +442,37 @@ function renderSiteHistoryChart(siteRef = null) {
 
   if (els.siteHistorySelect.value !== site.site_ref) els.siteHistorySelect.value = site.site_ref;
   els.siteHistoryTitle.textContent = `${site.site_ref} — ${site.location}`;
-  els.siteHistoryNote.textContent = 'All survey rounds are shown in chronological order. Missing or unverified results remain visible as gaps.';
-  updateSiteHistorySummary(site.site_ref);
 
   const rows = surveys.map((survey, index) => {
     const value = survey.status === 'verified' && typeof survey.results?.[site.site_ref] === 'number' && Number.isFinite(survey.results[site.site_ref])
       ? survey.results[site.site_ref]
       : null;
     let changePct = null;
-    if (value !== null && index > 0) {
-      const prev = surveys[index - 1];
-      const prevValue = prev?.status === 'verified' && typeof prev.results?.[site.site_ref] === 'number' && Number.isFinite(prev.results[site.site_ref])
-        ? prev.results[site.site_ref]
-        : null;
-      if (prevValue !== null && prevValue !== 0) changePct = ((value - prevValue) / prevValue) * 100;
+    if (value !== null) {
+      const previous = previousComparable(index, site.site_ref);
+      if (previous && previous.value !== 0) changePct = ((value - previous.value) / previous.value) * 100;
     }
     return { survey, value, changePct };
   });
 
+  const validRows = rows.filter(row => row.value !== null);
+  if (validRows.length) {
+    const latest = validRows.at(-1);
+    const pctLimit = (latest.value / LEGAL_LIMIT) * 100;
+    let changeText = 'first available result';
+    if (latest.changePct !== null) {
+      const arrow = latest.changePct < 0 ? '↓' : latest.changePct > 0 ? '↑' : '→';
+      const sign = latest.changePct > 0 ? '+' : '';
+      changeText = `${arrow} ${sign}${formatNumber(latest.changePct)}% from previous available survey`;
+    }
+    els.siteHistoryNote.textContent = `Latest available result: ${formatNumber(latest.value)} µg/m³ (${formatNumber(pctLimit)}% of 40 µg/m³ limit), ${changeText}.`;
+  } else {
+    els.siteHistoryNote.textContent = 'No verified results are currently available for this monitoring location.';
+  }
+
   const labels = rows.map(row => row.survey.label.replace('June ', 'Jun ').replace('July ', 'Jul ').replace('December ', 'Dec '));
   const values = rows.map(row => row.value);
-  const backgroundColors = rows.map(row => row.value === null ? '#b5bdc3' : colourFor(row.value));
+  const pointColors = rows.map(row => row.value === null ? '#b5bdc3' : colourFor(row.value));
 
   const legalLimitLinePlugin = {
     id: 'siteHistoryLegalLimitLine',
@@ -528,45 +499,29 @@ function renderSiteHistoryChart(siteRef = null) {
     }
   };
 
-  const valueLabelsPlugin = {
-    id: 'siteHistoryValueLabels',
-    afterDatasetsDraw(chart) {
-      const { ctx, chartArea } = chart;
-      const meta = chart.getDatasetMeta(0);
-      ctx.save();
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'bottom';
-      ctx.font = '700 11px system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif';
-      rows.forEach((row, index) => {
-        if (row.value === null) return;
-        const bar = meta.data[index];
-        const label = `${formatNumber(row.value)}`;
-        const y = Math.max(chartArea.top + 12, bar.y - 5);
-        ctx.fillStyle = '#26343d';
-        ctx.fillText(label, bar.x, y);
-      });
-      ctx.restore();
-    }
-  };
-
   const numericValues = values.filter(v => typeof v === 'number' && Number.isFinite(v));
   const maxValue = numericValues.length ? Math.max(...numericValues) : LEGAL_LIMIT;
-  const suggestedMax = Math.max(LEGAL_LIMIT + 10, Math.ceil(maxValue * 1.25 / 5) * 5);
+  const suggestedMax = Math.max(LEGAL_LIMIT + 10, Math.ceil(maxValue * 1.2 / 5) * 5);
 
   const canvas = document.getElementById('site-history-chart');
   if (siteHistoryChart) siteHistoryChart.destroy();
   siteHistoryChart = new Chart(canvas, {
-    type: 'bar',
-    plugins: [legalLimitLinePlugin, valueLabelsPlugin],
+    type: 'line',
+    plugins: [legalLimitLinePlugin],
     data: {
       labels,
       datasets: [{
         label: 'NO₂ µg/m³',
         data: values,
-        backgroundColor: backgroundColors,
-        borderColor: rows.map(row => row.value === null ? '#9aa4aa' : '#ffffff'),
-        borderWidth: 1,
-        borderSkipped: false
+        borderColor: '#43515a',
+        borderWidth: 3,
+        tension: 0.18,
+        spanGaps: false,
+        pointBackgroundColor: pointColors,
+        pointBorderColor: '#ffffff',
+        pointBorderWidth: 2,
+        pointRadius: rows.map(row => row.value === null ? 0 : 6),
+        pointHoverRadius: 8
       }]
     },
     options: {
@@ -586,7 +541,7 @@ function renderSiteHistoryChart(siteRef = null) {
               ];
               if (row.changePct !== null) {
                 const arrow = row.changePct < 0 ? '↓' : row.changePct > 0 ? '↑' : '→';
-                parts.push(`${arrow} ${row.changePct > 0 ? '+' : ''}${formatNumber(row.changePct)}% from immediately previous survey`);
+                parts.push(`${arrow} ${row.changePct > 0 ? '+' : ''}${formatNumber(row.changePct)}% from previous available survey`);
               }
               return parts;
             }
@@ -617,7 +572,7 @@ function setupSiteHistoryComparison() {
     const willOpen = els.siteHistoryPanel.hidden;
     els.siteHistoryPanel.hidden = !willOpen;
     els.siteHistoryToggle.setAttribute('aria-expanded', String(willOpen));
-    els.siteHistoryToggle.textContent = willOpen ? 'Hide one-location survey comparison' : 'Show one location across all surveys';
+    els.siteHistoryToggle.textContent = willOpen ? 'Hide site trend over time' : 'Show site trend over time';
     if (willOpen) {
       const ref = selectedSiteRef || els.siteHistorySelect.value || sites[0]?.site_ref;
       renderSiteHistoryChart(ref);
@@ -829,7 +784,6 @@ function setSurvey(index) {
   updateSummary();
   renderComparisonChart();
   renderWorstTrendChart();
-  renderSiteTrendAnalysis();
   if (selectedSiteRef) selectSite(selectedSiteRef, false);
   else updateUrl();
 }
@@ -858,103 +812,6 @@ function surveyDateValue(survey) {
   return Date.UTC(year, Math.max(0, month - 1), 15) / (365.2425 * 24 * 3600 * 1000);
 }
 
-function siteTrendMetrics(siteRef) {
-  const points = surveys
-    .filter(s => s.status === 'verified')
-    .map(s => ({ survey: s, value: valueFor(siteRef, surveys.indexOf(s)), x: surveyDateValue(s) }))
-    .filter(p => p.value !== null && Number.isFinite(Number(p.value)))
-    .map(p => ({ ...p, value: Number(p.value) }));
-
-  if (!points.length) return null;
-  const first = points[0], last = points.at(-1);
-  const previous = points.length > 1 ? points.at(-2) : null;
-  const overallPct = first.value ? ((last.value - first.value) / first.value) * 100 : null;
-  const recentPct = previous?.value ? ((last.value - previous.value) / previous.value) * 100 : null;
-  const values = points.map(p => p.value);
-  const meanY = values.reduce((a,b)=>a+b,0) / values.length;
-  let slope = 0;
-  if (points.length >= 2) {
-    const meanX = points.reduce((a,p)=>a+p.x,0) / points.length;
-    const numerator = points.reduce((a,p)=>a + (p.x-meanX)*(p.value-meanY),0);
-    const denominator = points.reduce((a,p)=>a + (p.x-meanX)**2,0);
-    slope = denominator ? numerator / denominator : 0;
-  }
-  const ratePctYear = meanY ? (slope / meanY) * 100 : 0;
-  let label, cls, arrow;
-  if (points.length < 2) { label='Insufficient data'; cls='trend-stable'; arrow='•'; }
-  else if (ratePctYear <= -5) { label='Strong improvement'; cls='trend-improve'; arrow='↓'; }
-  else if (ratePctYear < -2) { label='Moderate improvement'; cls='trend-improve'; arrow='↓'; }
-  else if (ratePctYear <= 2) { label='Broadly stable'; cls='trend-stable'; arrow='→'; }
-  else if (ratePctYear < 5) { label='Moderate deterioration'; cls='trend-worsen'; arrow='↑'; }
-  else { label='Strong deterioration'; cls='trend-worsen'; arrow='↑'; }
-  return { points, first, last, previous, overallPct, recentPct, min:Math.min(...values), max:Math.max(...values), ratePctYear, label, cls, arrow };
-}
-
-function pctText(v) {
-  if (v === null || !Number.isFinite(v)) return '—';
-  const sign = v > 0 ? '+' : '';
-  return `${sign}${formatNumber(v,1)}%`;
-}
-
-function renderSiteTrendAnalysis() {
-  if (!els.siteTrendPanel || els.siteTrendPanel.hidden) return;
-  const rows = sites.map(site => ({site, m:siteTrendMetrics(site.site_ref)}));
-  const improving = rows.filter(r => r.m && r.m.ratePctYear < -2).length;
-  const stable = rows.filter(r => r.m && r.m.ratePctYear >= -2 && r.m.ratePctYear <= 2).length;
-  const worsening = rows.filter(r => r.m && r.m.ratePctYear > 2).length;
-  const analysed = rows.filter(r => r.m && r.m.points.length >= 2).length;
-  els.siteTrendSummary.innerHTML = `
-    <div class="summary-card"><span>Sites analysed</span><strong>${analysed}</strong></div>
-    <div class="summary-card"><span>Improving</span><strong class="history-change-down">↓ ${improving}</strong></div>
-    <div class="summary-card"><span>Broadly stable</span><strong>${stable}</strong></div>
-    <div class="summary-card"><span>Worsening</span><strong class="history-change-up">↑ ${worsening}</strong></div>`;
-
-  els.siteTrendBody.innerHTML = '';
-  rows.forEach(({site,m}) => {
-    const tr=document.createElement('tr');
-    if (!m) {
-      tr.innerHTML=`<td class="trend-site">${site.site_ref}<small>${site.location}</small></td><td colspan="8">No valid results</td>`;
-    } else {
-      const limitPct=(m.last.value/40)*100;
-      const overallClass=m.overallPct>0?'history-change-up':m.overallPct<0?'history-change-down':'history-change-same';
-      const recentClass=m.recentPct>0?'history-change-up':m.recentPct<0?'history-change-down':'history-change-same';
-      const recentArrow=m.recentPct>0?'↑':m.recentPct<0?'↓':'→';
-      tr.innerHTML=`
-        <td class="trend-site">${site.site_ref}<small>${site.location}</small></td>
-        <td><span class="trend-badge ${m.cls}">${m.arrow} ${m.label}</span><br><small>${pctText(m.ratePctYear)}/yr</small></td>
-        <td class="trend-number">${m.points.length}</td>
-        <td class="trend-number">${formatNumber(m.first.value)}<br><small>${m.first.survey.label}</small></td>
-        <td class="trend-number">${formatNumber(m.last.value)}<br><small>${m.last.survey.label}</small></td>
-        <td class="trend-number ${overallClass}">${pctText(m.overallPct)}</td>
-        <td class="trend-number">${formatNumber(limitPct)}%</td>
-        <td class="trend-number ${recentClass}"><strong>${recentArrow} ${pctText(Math.abs(m.recentPct ?? 0))}</strong></td>
-        <td class="trend-number">${formatNumber(m.min)}–${formatNumber(m.max)}</td>`;
-    }
-    tr.addEventListener('click',()=>{
-      if (els.siteHistorySelect) els.siteHistorySelect.value=site.site_ref;
-      if (els.siteHistoryPanel) {
-        els.siteHistoryPanel.hidden=false;
-        els.siteHistoryToggle?.setAttribute('aria-expanded','true');
-        if (els.siteHistoryToggle) els.siteHistoryToggle.textContent='Hide one-location survey comparison';
-      }
-      selectSite(site.site_ref,false);
-      renderSiteHistoryChart(site.site_ref);
-      requestAnimationFrame(()=>document.getElementById('site-history-panel')?.scrollIntoView({behavior:'smooth',block:'start'}));
-    });
-    els.siteTrendBody.appendChild(tr);
-  });
-}
-
-function setupSiteTrendAnalysis() {
-  if (!els.siteTrendToggle || !els.siteTrendPanel) return;
-  els.siteTrendToggle.addEventListener('click',()=>{
-    const willOpen=els.siteTrendPanel.hidden;
-    els.siteTrendPanel.hidden=!willOpen;
-    els.siteTrendToggle.setAttribute('aria-expanded',String(willOpen));
-    els.siteTrendToggle.textContent=willOpen?'Hide site trend analysis':'Show site trend analysis';
-    if (willOpen) renderSiteTrendAnalysis();
-  });
-}
 
 Promise.all([
   fetch('data/sites.json').then(r => { if (!r.ok) throw new Error(`Unable to load monitoring sites (${r.status})`); return r.json(); }),
@@ -967,7 +824,6 @@ Promise.all([
   setupSortToggle();
   setupSiteHistoryComparison();
   setupWorstTrendComparison();
-  setupSiteTrendAnalysis();
 
   const bounds = [];
   sites.forEach(site => {

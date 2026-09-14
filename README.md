@@ -99,3 +99,7 @@ The one-location comparison panel now includes a visible snapshot for the select
 ## v16 — worst-performing location trend
 
 Adds a collapsible survey-trend chart showing the highest valid outdoor NO₂ result in each verified survey, identifying the QP site responsible, its percentage of the 40 µg/m³ limit, and the change versus the previous survey's highest result.
+
+
+## v18
+The detailed multi-site trend table has been replaced with a simpler single-site trend chart. Choose QP01–QP18 from a dropdown to see its NO₂ results through time as a line chart, with concentration-coloured points, the 40 µg/m³ reference line, and tooltip details for percentage of the limit and change from the previous available survey.

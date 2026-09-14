@@ -100,47 +100,28 @@
 
 
 
-    <section class="site-history-section" aria-label="Single-location survey comparison chart">
+    <section class="site-history-section" aria-label="Monitoring location trend over time">
       <button id="site-history-toggle" class="comparison-toggle" type="button" aria-expanded="false" aria-controls="site-history-panel">
-        Show one location across all surveys
+        Show site trend over time
       </button>
       <div id="site-history-panel" class="comparison-panel" hidden>
         <div class="site-history-heading">
           <div>
-            <p class="panel-kicker">One monitoring location</p>
-            <h2 id="site-history-title">Results across all surveys</h2>
-            <p id="site-history-note">Choose a monitoring location to compare all available results through time.</p>
+            <p class="panel-kicker">Monitoring location trend</p>
+            <h2 id="site-history-title">NO₂ trend over time</h2>
+            <p id="site-history-note">Choose a monitoring location to show its available results through time.</p>
           </div>
           <div class="site-history-control">
             <label for="site-history-select">Location</label>
             <select id="site-history-select" aria-label="Select monitoring location"></select>
           </div>
         </div>
-        <div id="site-history-summary" class="site-history-summary" aria-live="polite">
-          <div class="site-history-stat">
-            <span>Selected survey</span>
-            <strong id="site-history-survey">—</strong>
-          </div>
-          <div class="site-history-stat">
-            <span>NO₂ result</span>
-            <strong id="site-history-result">—</strong>
-          </div>
-          <div class="site-history-stat">
-            <span>% of 40 µg/m³ limit</span>
-            <strong id="site-history-limit-pct">—</strong>
-          </div>
-          <div class="site-history-stat">
-            <span>Change from previous survey</span>
-            <strong id="site-history-change">—</strong>
-          </div>
-        </div>
         <div class="site-history-chart-wrap">
-          <canvas id="site-history-chart" aria-label="NO2 results for one monitoring location across all surveys"></canvas>
+          <canvas id="site-history-chart" aria-label="NO2 trend for one monitoring location across all surveys"></canvas>
         </div>
-        <p class="comparison-footnote">Bars use the same concentration colours as the map. The dashed line marks 40 µg/m³, the annual mean legal limit. Missing or unverified survey results are shown as gaps.</p>
+        <p class="comparison-footnote">Points use the same concentration colours as the map. The dashed line marks 40 µg/m³, the annual mean legal limit. Missing or unverified results are shown as gaps. Hover over a point to see the percentage of the limit and change from the previous survey.</p>
       </div>
     </section>
-
 
     <section class="worst-trend-section" aria-label="Worst-performing location by survey">
       <button id="worst-trend-toggle" class="comparison-toggle" type="button" aria-expanded="false" aria-controls="worst-trend-panel">
@@ -162,28 +143,7 @@
     </section>
 
 
-    <section class="site-trend-section" aria-label="Long-term trend analysis by monitoring site">
-      <button id="site-trend-toggle" class="comparison-toggle" type="button" aria-expanded="false" aria-controls="site-trend-panel">
-        Show site trend analysis
-      </button>
-      <div id="site-trend-panel" class="comparison-panel" hidden>
-        <div class="comparison-heading">
-          <div>
-            <p class="panel-kicker">Long-term analysis</p>
-            <h2>NO₂ trend by monitoring location</h2>
-            <p>Trend direction is estimated from all valid results using the actual survey dates. Missing and pending results are ignored.</p>
-          </div>
-        </div>
-        <div id="site-trend-summary" class="trend-summary" aria-label="Trend classification summary"></div>
-        <div class="trend-table-wrap">
-          <table class="trend-table">
-            <thead><tr><th>Site</th><th>Trend</th><th>Valid results</th><th>Earliest</th><th>Latest</th><th>Overall change</th><th>% of 40 limit</th><th>Recent change</th><th>Range</th></tr></thead>
-            <tbody id="site-trend-body"></tbody>
-          </table>
-        </div>
-        <p class="comparison-footnote">Classification uses a date-based linear trend, expressed relative to each site's mean concentration: strong improvement ≤ −5%/year; moderate improvement −5% to −2%/year; broadly stable −2% to +2%/year; moderate deterioration +2% to +5%/year; strong deterioration ≥ +5%/year. Click a site row to open its full survey history.</p>
-      </div>
-    </section>
+
 
     <footer class="page-footer">
       <span>Outdoor monitoring locations QP01–QP18</span>
