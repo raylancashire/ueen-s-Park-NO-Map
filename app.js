@@ -40,22 +40,39 @@ function formatNumber(value, digits = 1) {
   return Number(value).toFixed(digits).replace(/\.0$/, '');
 }
 
-function bandFor(value) {
-  if (value === null || value === undefined || Number.isNaN(value)) return 'missing';
-  if (value < 20) return 'low';
-  if (value < 30) return 'mid';
-  if (value < 40) return 'high';
-  return 'vhigh';
+const no2ColourScale = [
+  [13, '#000066'], [16, '#01129c'], [19, '#0325d3'], [22, '#064af4'],
+  [25, '#0c95e9'], [28, '#19cfd2'], [31, '#2cd2ba'], [34, '#68de85'],
+  [37, '#a4eb50'], [40, '#ffff00'], [43, '#fff000'], [46, '#ffd600'],
+  [49, '#ffbb00'], [52, '#ffae00'], [55, '#ffa000'], [58, '#ff8500'],
+  [61, '#ff7800'], [64, '#ff3f00'], [67, '#ff3000'], [70, '#ff2000'],
+  [73, '#fe1500'], [76, '#fd0900'], [79, '#fa0101'], [83, '#f40202'],
+  [85, '#e90404'], [88, '#d30909'], [91, '#a61313'], [94, '#4d2727'],
+  [97, '#331a1a']
+];
+
+function roundedResult(value) {
+  if (value === null || value === undefined || Number.isNaN(value)) return null;
+  return Math.ceil(Number(value));
+}
+
+function colourFor(value) {
+  const rounded = roundedResult(value);
+  if (rounded === null) return '#7d8992';
+  const match = no2ColourScale.find(([limit]) => rounded <= limit);
+  return match ? match[1] : no2ColourScale.at(-1)[1];
 }
 
 function markerIcon(siteRef, value) {
-  const number = siteRef.replace('QP', '');
+  const rounded = roundedResult(value);
+  const label = rounded === null ? siteRef.replace('QP', '') : rounded;
+  const title = rounded === null ? `${siteRef}: no result` : `${siteRef}: ${rounded} µg/m³ (rounded up)`;
   return L.divIcon({
     className: '',
-    html: `<div class="site-marker ${bandFor(value)}">${number}</div>`,
-    iconSize: [34, 34],
-    iconAnchor: [17, 17],
-    popupAnchor: [0, -16]
+    html: `<div class="site-marker${rounded === null ? ' missing' : ''}" style="background:${colourFor(value)}" title="${title}">${label}</div>`,
+    iconSize: [38, 38],
+    iconAnchor: [19, 19],
+    popupAnchor: [0, -18]
   });
 }
 
@@ -84,7 +101,7 @@ function popupHtml(site) {
     ? `<div class="popup-note">Results awaiting verification.</div>`
     : value === null
       ? `<div class="popup-note">No result recorded for this survey.</div>`
-      : `<div class="popup-result">${formatNumber(value)} µg/m³</div>`;
+      : `<div class="popup-result">${formatNumber(value)} µg/m³ <span class="popup-rounded">(marker ${roundedResult(value)})</span></div>`;
   return `<div class="popup-ref">${site.site_ref}</div><div class="popup-location">${site.location}</div>${result}`;
 }
 

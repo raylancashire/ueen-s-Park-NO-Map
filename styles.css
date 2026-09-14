@@ -92,7 +92,7 @@ h1 { margin: 0; font-size: clamp(1.75rem, 4vw, 2.55rem); line-height: 1.08; }
 .coordinates dt { color: var(--muted); }
 .coordinates dd { margin: 0; font-variant-numeric: tabular-nums; }
 
-.site-marker { width: 34px; height: 34px; color: white; border: 2px solid white; border-radius: 50%; box-shadow: 0 2px 7px rgba(0,0,0,.35); display: grid; place-items: center; font-weight: 800; font-size: 11px; transition: transform .12s ease; }
+.site-marker { width: 38px; height: 38px; color: white; border: 2px solid white; border-radius: 50%; box-shadow: 0 2px 7px rgba(0,0,0,.35); display: grid; place-items: center; font-weight: 800; font-size: 12px; font-variant-numeric: tabular-nums; text-shadow: 0 1px 2px rgba(0,0,0,.45); transition: transform .12s ease; }
 .site-marker:hover { transform: scale(1.08); }
 .site-marker.low { background: var(--low); }
 .site-marker.mid { background: var(--mid); }
@@ -123,3 +123,18 @@ h1 { margin: 0; font-size: clamp(1.75rem, 4vw, 2.55rem); line-height: 1.08; }
   #map { min-height: 500px; }
   .map-legend { right: 12px; max-width: none; }
 }
+
+/* Detailed NO₂ concentration scale used for marker colours */
+.colour-ramp {
+  width: 100%;
+  height: 12px;
+  border: 1px solid rgba(0,0,0,.2);
+  border-radius: 3px;
+  background: linear-gradient(90deg,
+    #000066 0%, #0325d3 14%, #0c95e9 24%, #2cd2ba 33%, #a4eb50 38%,
+    #ffff00 43%, #ffd600 50%, #ff8500 61%, #ff3f00 69%, #fa0101 82%,
+    #a61313 91%, #331a1a 100%);
+}
+.legend-range { width: 100%; display: flex !important; justify-content: space-between; gap: 8px !important; font-variant-numeric: tabular-nums; }
+.legend-range > span { color: var(--muted); }
+.popup-rounded { font-size: .8rem; font-weight: 600; color: #5f6d78; }
