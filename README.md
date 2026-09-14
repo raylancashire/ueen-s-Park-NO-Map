@@ -106,3 +106,7 @@ The detailed multi-site trend table has been replaced with a simpler single-site
 
 ## v20
 Adds a dashed linear trend line to the selectable single-site trend chart. The regression uses the actual survey dates, so irregular gaps between survey rounds are reflected in the calculation. The trend line stops at the latest verified result and does not extrapolate into pending surveys.
+
+
+## v21 update
+The linear trend line on the selected-location bar chart is now drawn in front of the bars for better visibility.

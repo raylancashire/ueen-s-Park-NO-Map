@@ -540,6 +540,7 @@ function renderSiteHistoryChart(siteRef = null) {
       labels,
       datasets: [{
         type: 'bar',
+        order: 2,
         label: 'Measured NO₂',
         data: values,
         backgroundColor: pointColors,
@@ -548,6 +549,7 @@ function renderSiteHistoryChart(siteRef = null) {
         borderRadius: 4
       }, {
         type: 'line',
+        order: 1,
         label: 'Linear trend',
         data: trendValues,
         borderColor: '#111111',
