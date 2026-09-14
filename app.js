@@ -428,7 +428,161 @@ function renderComparisonChart() {
   });
 }
 
-\nfunction renderSiteHistoryChart(siteRef = null) {\n  if (els.siteHistoryPanel.hidden) return;\n\n  const LEGAL_LIMIT = 40;\n  const chosenRef = siteRef || els.siteHistorySelect.value || selectedSiteRef || sites[0]?.site_ref;\n  const site = sites.find(s => s.site_ref === chosenRef);\n  if (!site) return;\n\n  if (els.siteHistorySelect.value !== site.site_ref) els.siteHistorySelect.value = site.site_ref;\n  els.siteHistoryTitle.textContent = `${site.site_ref} — ${site.location}`;\n  els.siteHistoryNote.textContent = 'All survey rounds are shown in chronological order. Missing or unverified results remain visible as gaps.';\n\n  const rows = surveys.map((survey, index) => {\n    const value = survey.status === 'verified' && typeof survey.results?.[site.site_ref] === 'number' && Number.isFinite(survey.results[site.site_ref])\n      ? survey.results[site.site_ref]\n      : null;\n    let changePct = null;\n    if (value !== null && index > 0) {\n      const prev = surveys[index - 1];\n      const prevValue = prev?.status === 'verified' && typeof prev.results?.[site.site_ref] === 'number' && Number.isFinite(prev.results[site.site_ref])\n        ? prev.results[site.site_ref]\n        : null;\n      if (prevValue !== null && prevValue !== 0) changePct = ((value - prevValue) / prevValue) * 100;\n    }\n    return { survey, value, changePct };\n  });\n\n  const labels = rows.map(row => row.survey.label.replace('June ', 'Jun ').replace('July ', 'Jul ').replace('December ', 'Dec '));\n  const values = rows.map(row => row.value);\n  const backgroundColors = rows.map(row => row.value === null ? '#b5bdc3' : colourFor(row.value));\n\n  const legalLimitLinePlugin = {\n    id: 'siteHistoryLegalLimitLine',\n    afterDraw(chart) {\n      const { ctx, chartArea, scales } = chart;\n      if (!chartArea || !scales.y) return;\n      const y = scales.y.getPixelForValue(LEGAL_LIMIT);\n      if (y < chartArea.top || y > chartArea.bottom) return;\n      ctx.save();\n      ctx.beginPath();\n      ctx.moveTo(chartArea.left, y);\n      ctx.lineTo(chartArea.right, y);\n      ctx.lineWidth = 2;\n      ctx.strokeStyle = '#202020';\n      ctx.setLineDash([6, 4]);\n      ctx.stroke();\n      ctx.setLineDash([]);\n      ctx.font = '600 12px system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif';\n      ctx.textAlign = 'right';\n      ctx.textBaseline = 'bottom';\n      ctx.fillStyle = '#202020';\n      ctx.fillText('40 µg/m³ legal limit', chartArea.right, y - 4);\n      ctx.restore();\n    }\n  };\n\n  const valueLabelsPlugin = {\n    id: 'siteHistoryValueLabels',\n    afterDatasetsDraw(chart) {\n      const { ctx, chartArea } = chart;\n      const meta = chart.getDatasetMeta(0);\n      ctx.save();\n      ctx.textAlign = 'center';\n      ctx.textBaseline = 'bottom';\n      ctx.font = '700 11px system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif';\n      rows.forEach((row, index) => {\n        if (row.value === null) return;\n        const bar = meta.data[index];\n        const label = `${formatNumber(row.value)}`;\n        const y = Math.max(chartArea.top + 12, bar.y - 5);\n        ctx.fillStyle = '#26343d';\n        ctx.fillText(label, bar.x, y);\n      });\n      ctx.restore();\n    }\n  };\n\n  const numericValues = values.filter(v => typeof v === 'number' && Number.isFinite(v));\n  const maxValue = numericValues.length ? Math.max(...numericValues) : LEGAL_LIMIT;\n  const suggestedMax = Math.max(LEGAL_LIMIT + 10, Math.ceil(maxValue * 1.25 / 5) * 5);\n\n  const canvas = document.getElementById('site-history-chart');\n  if (siteHistoryChart) siteHistoryChart.destroy();\n  siteHistoryChart = new Chart(canvas, {\n    type: 'bar',\n    plugins: [legalLimitLinePlugin, valueLabelsPlugin],\n    data: {\n      labels,\n      datasets: [{\n        label: 'NO₂ µg/m³',\n        data: values,\n        backgroundColor: backgroundColors,\n        borderColor: rows.map(row => row.value === null ? '#9aa4aa' : '#ffffff'),\n        borderWidth: 1,\n        borderSkipped: false\n      }]\n    },\n    options: {\n      responsive: true,\n      maintainAspectRatio: false,\n      interaction: { mode: 'nearest', intersect: true },\n      plugins: {\n        legend: { display: false },\n        tooltip: {\n          callbacks: {\n            label: ctx => {\n              const row = rows[ctx.dataIndex];\n              if (row.value === null) return row.survey.status === 'verified' ? 'No result' : 'Result not verified';\n              const parts = [\n                `${formatNumber(row.value)} µg/m³`,\n                `${formatNumber((row.value / LEGAL_LIMIT) * 100)}% of 40 µg/m³ legal limit`\n              ];\n              if (row.changePct !== null) {\n                const arrow = row.changePct < 0 ? '↓' : row.changePct > 0 ? '↑' : '→';\n                parts.push(`${arrow} ${row.changePct > 0 ? '+' : ''}${formatNumber(row.changePct)}% from immediately previous survey`);\n              }\n              return parts;\n            }\n          }\n        }\n      },\n      scales: {\n        y: { beginAtZero: true, suggestedMax, title: { display: true, text: 'NO₂ µg/m³' } },\n        x: { ticks: { maxRotation: 45, minRotation: 0 } }\n      }\n    }\n  });\n}\n\nfunction setupSiteHistoryComparison() {\n  sites.forEach(site => {\n    const option = document.createElement('option');\n    option.value = site.site_ref;\n    option.textContent = `${site.site_ref} — ${site.location}`;\n    els.siteHistorySelect.appendChild(option);\n  });\n\n  els.siteHistorySelect.addEventListener('change', () => {\n    renderSiteHistoryChart(els.siteHistorySelect.value);\n  });\n\n  els.siteHistoryToggle.addEventListener('click', () => {\n    const willOpen = els.siteHistoryPanel.hidden;\n    els.siteHistoryPanel.hidden = !willOpen;\n    els.siteHistoryToggle.setAttribute('aria-expanded', String(willOpen));\n    els.siteHistoryToggle.textContent = willOpen ? 'Hide one-location survey comparison' : 'Show one location across all surveys';\n    if (willOpen) {\n      const ref = selectedSiteRef || els.siteHistorySelect.value || sites[0]?.site_ref;\n      renderSiteHistoryChart(ref);\n      requestAnimationFrame(() => siteHistoryChart?.resize());\n    }\n  });\n}\n
+
+function renderSiteHistoryChart(siteRef = null) {
+  if (els.siteHistoryPanel.hidden) return;
+
+  const LEGAL_LIMIT = 40;
+  const chosenRef = siteRef || els.siteHistorySelect.value || selectedSiteRef || sites[0]?.site_ref;
+  const site = sites.find(s => s.site_ref === chosenRef);
+  if (!site) return;
+
+  if (els.siteHistorySelect.value !== site.site_ref) els.siteHistorySelect.value = site.site_ref;
+  els.siteHistoryTitle.textContent = `${site.site_ref} — ${site.location}`;
+  els.siteHistoryNote.textContent = 'All survey rounds are shown in chronological order. Missing or unverified results remain visible as gaps.';
+
+  const rows = surveys.map((survey, index) => {
+    const value = survey.status === 'verified' && typeof survey.results?.[site.site_ref] === 'number' && Number.isFinite(survey.results[site.site_ref])
+      ? survey.results[site.site_ref]
+      : null;
+    let changePct = null;
+    if (value !== null && index > 0) {
+      const prev = surveys[index - 1];
+      const prevValue = prev?.status === 'verified' && typeof prev.results?.[site.site_ref] === 'number' && Number.isFinite(prev.results[site.site_ref])
+        ? prev.results[site.site_ref]
+        : null;
+      if (prevValue !== null && prevValue !== 0) changePct = ((value - prevValue) / prevValue) * 100;
+    }
+    return { survey, value, changePct };
+  });
+
+  const labels = rows.map(row => row.survey.label.replace('June ', 'Jun ').replace('July ', 'Jul ').replace('December ', 'Dec '));
+  const values = rows.map(row => row.value);
+  const backgroundColors = rows.map(row => row.value === null ? '#b5bdc3' : colourFor(row.value));
+
+  const legalLimitLinePlugin = {
+    id: 'siteHistoryLegalLimitLine',
+    afterDraw(chart) {
+      const { ctx, chartArea, scales } = chart;
+      if (!chartArea || !scales.y) return;
+      const y = scales.y.getPixelForValue(LEGAL_LIMIT);
+      if (y < chartArea.top || y > chartArea.bottom) return;
+      ctx.save();
+      ctx.beginPath();
+      ctx.moveTo(chartArea.left, y);
+      ctx.lineTo(chartArea.right, y);
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = '#202020';
+      ctx.setLineDash([6, 4]);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.font = '600 12px system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif';
+      ctx.textAlign = 'right';
+      ctx.textBaseline = 'bottom';
+      ctx.fillStyle = '#202020';
+      ctx.fillText('40 µg/m³ legal limit', chartArea.right, y - 4);
+      ctx.restore();
+    }
+  };
+
+  const valueLabelsPlugin = {
+    id: 'siteHistoryValueLabels',
+    afterDatasetsDraw(chart) {
+      const { ctx, chartArea } = chart;
+      const meta = chart.getDatasetMeta(0);
+      ctx.save();
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'bottom';
+      ctx.font = '700 11px system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif';
+      rows.forEach((row, index) => {
+        if (row.value === null) return;
+        const bar = meta.data[index];
+        const label = `${formatNumber(row.value)}`;
+        const y = Math.max(chartArea.top + 12, bar.y - 5);
+        ctx.fillStyle = '#26343d';
+        ctx.fillText(label, bar.x, y);
+      });
+      ctx.restore();
+    }
+  };
+
+  const numericValues = values.filter(v => typeof v === 'number' && Number.isFinite(v));
+  const maxValue = numericValues.length ? Math.max(...numericValues) : LEGAL_LIMIT;
+  const suggestedMax = Math.max(LEGAL_LIMIT + 10, Math.ceil(maxValue * 1.25 / 5) * 5);
+
+  const canvas = document.getElementById('site-history-chart');
+  if (siteHistoryChart) siteHistoryChart.destroy();
+  siteHistoryChart = new Chart(canvas, {
+    type: 'bar',
+    plugins: [legalLimitLinePlugin, valueLabelsPlugin],
+    data: {
+      labels,
+      datasets: [{
+        label: 'NO₂ µg/m³',
+        data: values,
+        backgroundColor: backgroundColors,
+        borderColor: rows.map(row => row.value === null ? '#9aa4aa' : '#ffffff'),
+        borderWidth: 1,
+        borderSkipped: false
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode: 'nearest', intersect: true },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: ctx => {
+              const row = rows[ctx.dataIndex];
+              if (row.value === null) return row.survey.status === 'verified' ? 'No result' : 'Result not verified';
+              const parts = [
+                `${formatNumber(row.value)} µg/m³`,
+                `${formatNumber((row.value / LEGAL_LIMIT) * 100)}% of 40 µg/m³ legal limit`
+              ];
+              if (row.changePct !== null) {
+                const arrow = row.changePct < 0 ? '↓' : row.changePct > 0 ? '↑' : '→';
+                parts.push(`${arrow} ${row.changePct > 0 ? '+' : ''}${formatNumber(row.changePct)}% from immediately previous survey`);
+              }
+              return parts;
+            }
+          }
+        }
+      },
+      scales: {
+        y: { beginAtZero: true, suggestedMax, title: { display: true, text: 'NO₂ µg/m³' } },
+        x: { ticks: { maxRotation: 45, minRotation: 0 } }
+      }
+    }
+  });
+}
+
+function setupSiteHistoryComparison() {
+  sites.forEach(site => {
+    const option = document.createElement('option');
+    option.value = site.site_ref;
+    option.textContent = `${site.site_ref} — ${site.location}`;
+    els.siteHistorySelect.appendChild(option);
+  });
+
+  els.siteHistorySelect.addEventListener('change', () => {
+    renderSiteHistoryChart(els.siteHistorySelect.value);
+  });
+
+  els.siteHistoryToggle.addEventListener('click', () => {
+    const willOpen = els.siteHistoryPanel.hidden;
+    els.siteHistoryPanel.hidden = !willOpen;
+    els.siteHistoryToggle.setAttribute('aria-expanded', String(willOpen));
+    els.siteHistoryToggle.textContent = willOpen ? 'Hide one-location survey comparison' : 'Show one location across all surveys';
+    if (willOpen) {
+      const ref = selectedSiteRef || els.siteHistorySelect.value || sites[0]?.site_ref;
+      renderSiteHistoryChart(ref);
+      requestAnimationFrame(() => siteHistoryChart?.resize());
+    }
+  });
+}
+
 function setupSortToggle() {
   els.sortToggle.addEventListener('click', () => {
     comparisonSort = comparisonSort === 'desc' ? 'asc' : 'desc';
