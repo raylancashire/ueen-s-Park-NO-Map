@@ -49,3 +49,7 @@ GitHub Pages will update automatically after the commit is deployed.
 ## Embed elsewhere
 
 The same GitHub Pages URL can later be embedded on Webador and the Queen's Park Community Council website with an iframe.
+
+
+## Marker rounding
+Marker labels use standard rounding to the nearest whole number (for example 32.4 → 32 and 32.5 → 33). Marker colours are based on that rounded value.

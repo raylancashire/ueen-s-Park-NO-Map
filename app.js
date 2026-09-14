@@ -53,7 +53,7 @@ const no2ColourScale = [
 
 function roundedResult(value) {
   if (value === null || value === undefined || Number.isNaN(value)) return null;
-  return Math.ceil(Number(value));
+  return Math.round(Number(value));
 }
 
 function colourFor(value) {
@@ -66,7 +66,7 @@ function colourFor(value) {
 function markerIcon(siteRef, value) {
   const rounded = roundedResult(value);
   const label = rounded === null ? siteRef.replace('QP', '') : rounded;
-  const title = rounded === null ? `${siteRef}: no result` : `${siteRef}: ${rounded} µg/m³ (rounded up)`;
+  const title = rounded === null ? `${siteRef}: no result` : `${siteRef}: ${rounded} µg/m³ (rounded to nearest whole number)`;
   return L.divIcon({
     className: '',
     html: `<div class="site-marker${rounded === null ? ' missing' : ''}" style="background:${colourFor(value)}" title="${title}">${label}</div>`,
