@@ -328,3 +328,27 @@ h1 { margin: 0; font-size: clamp(1.75rem, 4vw, 2.55rem); line-height: 1.08; }
 .trend-number { font-variant-numeric:tabular-nums; white-space:nowrap; }
 @media (max-width:760px){ .trend-summary{grid-template-columns:1fr 1fr;} }
 @media (max-width:460px){ .trend-summary{grid-template-columns:1fr;} }
+
+/* Best and worst long-term performers */
+.performance-section { margin-top: 16px; }
+.performance-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-top:14px; }
+.performance-group { border:1px solid var(--border); border-radius:12px; overflow:hidden; background:#fff; }
+.performance-group h3 { margin:0; padding:12px 14px; font-size:1rem; background:#f4f7f8; }
+.performance-best h3 { color:#15803d; }
+.performance-worst h3 { color:#c62828; }
+.performance-list { display:grid; }
+.performance-item { appearance:none; width:100%; border:0; border-bottom:1px solid var(--border); background:#fff; color:var(--ink); display:grid; grid-template-columns:30px minmax(0,1fr) auto; gap:10px; align-items:center; padding:12px 14px; text-align:left; cursor:pointer; font:inherit; }
+.performance-item:last-child { border-bottom:0; }
+.performance-item:hover { background:#f7fafb; }
+.performance-rank { width:26px; height:26px; border-radius:50%; display:grid; place-items:center; background:#eef2f4; font-weight:800; }
+.performance-site { min-width:0; display:grid; gap:2px; }
+.performance-site strong { font-size:.92rem; }
+.performance-site small { color:var(--muted); line-height:1.25; }
+.performance-metrics { display:grid; gap:2px; text-align:right; white-space:nowrap; font-variant-numeric:tabular-nums; }
+.performance-metrics strong { font-size:.9rem; }
+.performance-metrics small { color:var(--muted); font-size:.76rem; }
+.performance-down strong { color:#15803d; }
+.performance-up strong { color:#c62828; }
+.performance-same strong { color:#53616b; }
+@media (max-width:760px) { .performance-grid { grid-template-columns:1fr; } }
+@media (max-width:460px) { .performance-item { grid-template-columns:28px minmax(0,1fr); } .performance-metrics { grid-column:2; text-align:left; } }

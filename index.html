@@ -123,25 +123,31 @@
       </div>
     </section>
 
-    <section class="worst-trend-section" aria-label="Worst-performing location by survey">
-      <button id="worst-trend-toggle" class="comparison-toggle" type="button" aria-expanded="false" aria-controls="worst-trend-panel">
-        Show worst-performing location trend
+    <section class="performance-section" aria-label="Best and worst performing locations">
+      <button id="performance-toggle" class="comparison-toggle" type="button" aria-expanded="false" aria-controls="performance-panel">
+        Show best &amp; worst performing locations
       </button>
-      <div id="worst-trend-panel" class="comparison-panel" hidden>
+      <div id="performance-panel" class="comparison-panel" hidden>
         <div class="comparison-heading">
           <div>
-            <p class="panel-kicker">Survey trend</p>
-            <h2>Worst-performing location in each survey</h2>
-            <p>For each verified survey, this chart shows the monitoring location with the highest NO₂ concentration.</p>
+            <p class="panel-kicker">Long-term performance</p>
+            <h2>Best &amp; worst performing locations</h2>
+            <p>Ranked by the long-term NO₂ trend using the actual survey dates. A downward trend indicates improving concentrations.</p>
           </div>
         </div>
-        <div class="site-history-chart-wrap">
-          <canvas id="worst-trend-chart" aria-label="Highest NO2 result and monitoring location in each survey"></canvas>
+        <div class="performance-grid">
+          <div class="performance-group performance-best">
+            <h3>Best performing</h3>
+            <div id="best-performing-list" class="performance-list"></div>
+          </div>
+          <div class="performance-group performance-worst">
+            <h3>Worst performing</h3>
+            <div id="worst-performing-list" class="performance-list"></div>
+          </div>
         </div>
-        <p class="comparison-footnote">Bars use the same concentration colours as the map. Labels identify the site with the highest result in each survey. The dashed line marks 40 µg/m³, the annual mean legal limit. Pending surveys and surveys with no valid results are shown as gaps.</p>
+        <p class="comparison-footnote">Performance is based on the slope of each site's long-term trend, not simply its latest concentration. Click a location to open it in the site trend chart above.</p>
       </div>
     </section>
-
 
 
 
