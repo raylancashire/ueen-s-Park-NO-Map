@@ -117,3 +117,10 @@ The selectable site trend chart now labels each measured bar with the percentage
 
 ## v25 accessibility update
 Numeric labels now use automatic high-contrast text. Dark NO₂ colours use white text and lighter colours use dark text, based on WCAG-style relative luminance/contrast calculations. This applies to the site-trend bar labels and map marker numbers.
+
+
+## v27 data update
+
+The survey chronology has been rebuilt from the available Queen's Park spreadsheets and Gradko laboratory reports. It now includes verified outdoor QP01–QP18 results from 2017 through June–July 2026, including the added 2021–2024 intermediate rounds and verified 2025–2026 rounds. Missing outdoor tubes remain null. Indoor monitors are excluded. Quality-control comments from laboratory reports are retained in `quality_notes` in `data/results.json`.
+
+The historical source spreadsheets also confirm the actual exposure periods. In particular, the 2018 survey was conducted 24 November–22 December 2018, so its chronology key is `2018-11` rather than `2018-06`.

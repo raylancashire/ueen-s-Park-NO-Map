@@ -1,7 +1,7 @@
 [
   {
     "survey": "2017-06",
-    "label": "June 2017",
+    "label": "June\u2013July 2017",
     "status": "verified",
     "results": {
       "QP01": 24.36,
@@ -25,8 +25,8 @@
     }
   },
   {
-    "survey": "2018-06",
-    "label": "June 2018",
+    "survey": "2018-11",
+    "label": "November\u2013December 2018",
     "status": "verified",
     "results": {
       "QP01": 36.74,
@@ -51,7 +51,7 @@
   },
   {
     "survey": "2019-06",
-    "label": "June 2019",
+    "label": "June\u2013July 2019",
     "status": "verified",
     "results": {
       "QP01": 22.59,
@@ -76,7 +76,7 @@
   },
   {
     "survey": "2020-12",
-    "label": "December 2020",
+    "label": "December 2020\u2013January 2021",
     "status": "verified",
     "results": {
       "QP01": 28.45,
@@ -101,32 +101,164 @@
   },
   {
     "survey": "2021-07",
-    "label": "July 2021",
+    "label": "July\u2013August 2021",
     "status": "verified",
     "results": {
-      "QP01": 13.61,
-      "QP02": 11.72,
-      "QP09": 17.39,
-      "QP07": 13.9,
-      "QP13": 24.29,
-      "QP06": 27.48,
-      "QP05": 13.6,
-      "QP10": 16.13,
-      "QP16": 22.4,
-      "QP12": 16.22,
-      "QP15": 29.42,
-      "QP14": 30.59,
-      "QP04": 24.66,
-      "QP03": 15.84,
-      "QP11": 25.34,
-      "QP17": 28.11,
-      "QP18": 23.7,
-      "QP08": 16.38
+      "QP01": 15.67,
+      "QP02": 12.9,
+      "QP09": 17.15,
+      "QP07": 20.37,
+      "QP13": 27.66,
+      "QP06": 32.33,
+      "QP05": 18.06,
+      "QP10": 18.73,
+      "QP16": 27.21,
+      "QP12": 19.11,
+      "QP15": 31.48,
+      "QP14": 33.68,
+      "QP04": null,
+      "QP03": 19.13,
+      "QP11": 26.76,
+      "QP17": 26.23,
+      "QP18": 22.54,
+      "QP08": 17.92
+    },
+    "quality_notes": {
+      "QP15": "Tube contained spiders & nest/web; result may be compromised."
+    }
+  },
+  {
+    "survey": "2021-12",
+    "label": "December 2021\u2013January 2022",
+    "status": "verified",
+    "results": {
+      "QP01": 32.27,
+      "QP02": 28.01,
+      "QP09": 33.44,
+      "QP07": 34.38,
+      "QP13": 45.43,
+      "QP06": 49.01,
+      "QP05": 29.62,
+      "QP10": 35.04,
+      "QP16": 36.93,
+      "QP12": 34.33,
+      "QP15": 39.87,
+      "QP14": 43.66,
+      "QP04": 35.27,
+      "QP03": 30.12,
+      "QP11": 41.8,
+      "QP17": 42.72,
+      "QP18": 39.37,
+      "QP08": 33.0
+    }
+  },
+  {
+    "survey": "2022-06",
+    "label": "June\u2013July 2022",
+    "status": "verified",
+    "results": {
+      "QP01": null,
+      "QP02": 12.04,
+      "QP09": 14.75,
+      "QP07": 18.11,
+      "QP13": 25.78,
+      "QP06": 30.2,
+      "QP05": 15.76,
+      "QP10": 17.44,
+      "QP16": 16.93,
+      "QP12": 19.09,
+      "QP15": 27.11,
+      "QP14": 33.31,
+      "QP04": 22.78,
+      "QP03": 17.71,
+      "QP11": 32.53,
+      "QP17": 29.68,
+      "QP18": 23.11,
+      "QP08": 17.57
+    },
+    "quality_notes": {
+      "QP09": "Customer comment: tube contains spiders.",
+      "QP18": "Tube contained spiders; result may be compromised."
+    }
+  },
+  {
+    "survey": "2023-01",
+    "label": "January\u2013February 2023",
+    "status": "verified",
+    "results": {
+      "QP01": 39.49,
+      "QP02": 37.69,
+      "QP09": 39.62,
+      "QP07": 42.97,
+      "QP13": 42.6,
+      "QP06": 48.16,
+      "QP05": 39.55,
+      "QP10": 39.02,
+      "QP16": 43.38,
+      "QP12": 38.77,
+      "QP15": 45.91,
+      "QP14": 51.35,
+      "QP04": 48.53,
+      "QP03": 40.85,
+      "QP11": 54.27,
+      "QP17": 47.78,
+      "QP18": 46.39,
+      "QP08": 40.24
+    }
+  },
+  {
+    "survey": "2023-06",
+    "label": "June\u2013July 2023",
+    "status": "verified",
+    "results": {
+      "QP01": 14.54,
+      "QP02": 12.28,
+      "QP09": 14.17,
+      "QP07": 18.91,
+      "QP13": 25.47,
+      "QP06": 28.8,
+      "QP05": 15.65,
+      "QP10": 16.7,
+      "QP16": null,
+      "QP12": 16.84,
+      "QP15": 29.73,
+      "QP14": 31.76,
+      "QP04": 22.39,
+      "QP03": 17.23,
+      "QP11": 26.16,
+      "QP17": 26.14,
+      "QP18": 24.23,
+      "QP08": 18.06
+    }
+  },
+  {
+    "survey": "2023-12",
+    "label": "December 2023\u2013January 2024",
+    "status": "verified",
+    "results": {
+      "QP01": 19.86,
+      "QP02": 15.58,
+      "QP09": 19.54,
+      "QP07": 22.92,
+      "QP13": 24.46,
+      "QP06": 27.53,
+      "QP05": 17.74,
+      "QP10": 20.4,
+      "QP16": 25.48,
+      "QP12": 20.53,
+      "QP15": 28.04,
+      "QP14": 29.48,
+      "QP04": 24.69,
+      "QP03": 20.34,
+      "QP11": 26.86,
+      "QP17": 25.18,
+      "QP18": 23.4,
+      "QP08": 20.68
     }
   },
   {
     "survey": "2024-06",
-    "label": "June 2024",
+    "label": "June\u2013July 2024",
     "status": "verified",
     "results": {
       "QP01": 13.61,
@@ -151,7 +283,7 @@
   },
   {
     "survey": "2024-12",
-    "label": "December 2024",
+    "label": "December 2024\u2013January 2025",
     "status": "verified",
     "results": {
       "QP01": 32.09,
@@ -176,7 +308,7 @@
   },
   {
     "survey": "2025-06",
-    "label": "June 2025",
+    "label": "June\u2013July 2025",
     "status": "verified",
     "results": {
       "QP01": 12.67,
@@ -201,16 +333,60 @@
   },
   {
     "survey": "2025-12",
-    "label": "December 2025",
-    "status": "pending",
-    "note": "Results awaiting verification before publication.",
-    "results": {}
+    "label": "December 2025\u2013January 2026",
+    "status": "verified",
+    "results": {
+      "QP01": 24.61,
+      "QP02": 17.66,
+      "QP09": 25.88,
+      "QP07": 27.22,
+      "QP13": 26.77,
+      "QP06": 27.77,
+      "QP05": 24.25,
+      "QP10": 27.54,
+      "QP16": 26.62,
+      "QP12": 25.01,
+      "QP15": 33.91,
+      "QP14": 30.49,
+      "QP04": 35.0,
+      "QP03": 24.09,
+      "QP11": null,
+      "QP17": 34.39,
+      "QP18": 26.28,
+      "QP08": 25.77
+    },
+    "quality_notes": {
+      "QP18": "Customer comment: spider & web inside tube.",
+      "QP14": "Tube contained water droplets; result may be compromised.",
+      "QP02": "Tube contained water droplets; result may be compromised."
+    }
   },
   {
     "survey": "2026-06",
-    "label": "June 2026",
-    "status": "pending",
-    "note": "Results awaiting verification before publication.",
-    "results": {}
+    "label": "June\u2013July 2026",
+    "status": "verified",
+    "results": {
+      "QP01": 9.69,
+      "QP02": 11.06,
+      "QP09": 12.39,
+      "QP07": 15.56,
+      "QP13": 18.96,
+      "QP06": 18.11,
+      "QP05": 11.16,
+      "QP10": 12.62,
+      "QP16": 15.28,
+      "QP12": 13.25,
+      "QP15": 21.98,
+      "QP14": 27.49,
+      "QP04": 23.07,
+      "QP03": 13.44,
+      "QP11": 26.16,
+      "QP17": 29.54,
+      "QP18": 17.66,
+      "QP08": 13.54
+    },
+    "quality_notes": {
+      "QP02": "Tube contained a spider; result may be compromised."
+    }
   }
 ]
