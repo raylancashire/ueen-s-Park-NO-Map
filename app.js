@@ -896,8 +896,20 @@ Promise.all([
     map.addControl(new HomeControl());
   }
 
-  // Queen's Park ward boundary (GSS E05013804). This is optional: if the
-  // external boundary service is unavailable, the NO2 map continues normally.
+  // Queen's Park ward boundary (GSS E05013804).
+  // Register the overlay immediately so Leaflet's standard Layers icon is
+  // always visible in the top-right, even while the boundary is loading.
+  // The layer group is NOT added to the map, so the boundary is OFF by default.
+  const wardBoundaryLayer = L.layerGroup();
+  L.control.layers(null, {
+    "Queen's Park ward boundary": wardBoundaryLayer
+  }, {
+    position: 'topright',
+    collapsed: true
+  }).addTo(map);
+
+  // Load the boundary independently. A failed request cannot interrupt the
+  // NO2 map, markers, survey selector or analysis.
   const wardBoundaryUrl = "https://gis.london.gov.uk/arcgis/rest/services/apps/webmap_context_layer/FeatureServer/18/query?where=ward_code%3D%27E05013804%27&outFields=ward_name%2Cward_code&outSR=4326&f=geojson";
   fetch(wardBoundaryUrl)
     .then(r => {
@@ -906,19 +918,10 @@ Promise.all([
     })
     .then(geojson => {
       if (!geojson?.features?.length) throw new Error("Queen's Park boundary was not returned");
-      const wardBoundaryLayer = L.geoJSON(geojson, {
+      L.geoJSON(geojson, {
         style: { color: '#d7191c', weight: 3, opacity: 0.95, fill: false },
         interactive: false
-      });
-
-      // Optional overlay control: boundary is OFF by default and can be
-      // switched on/off without affecting the NO2 markers or survey state.
-      L.control.layers(null, {
-        "Queen's Park ward boundary": wardBoundaryLayer
-      }, {
-        position: 'topright',
-        collapsed: true
-      }).addTo(map);
+      }).addTo(wardBoundaryLayer);
     })
     .catch(error => console.warn('Queen\'s Park boundary could not be displayed:', error));
 
