@@ -7,6 +7,18 @@
   <link rel="preconnect" href="https://unpkg.com" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="" />
   <link rel="stylesheet" href="styles.css" />
+  <style>
+    .survey-trend-chart-wrap { position: relative; height: 320px; margin: 1rem 0 1.25rem; }
+    .survey-trend-table-wrap { overflow-x: auto; }
+    .survey-trend-table { width: 100%; border-collapse: collapse; font-size: 0.94rem; }
+    .survey-trend-table th, .survey-trend-table td { padding: 0.7rem 0.75rem; border-bottom: 1px solid #dfe6e8; text-align: left; white-space: nowrap; }
+    .survey-trend-table th { font-weight: 700; }
+    .survey-trend-selected { background: rgba(24, 105, 82, 0.08); }
+    .trend-improving { color: #18704f; font-weight: 700; }
+    .trend-deteriorating { color: #a3362d; font-weight: 700; }
+    .trend-stable { color: #5f6870; font-weight: 700; }
+    @media (max-width: 700px) { .survey-trend-chart-wrap { height: 270px; } }
+  </style>
 </head>
 <body>
   <main class="app-shell">
@@ -120,6 +132,31 @@
           <canvas id="site-history-chart" aria-label="NO2 trend for one monitoring location across all surveys"></canvas>
         </div>
         <p class="comparison-footnote">Points use the same concentration colours as the map. The dashed line marks 40 µg/m³, the annual mean legal limit. Missing or unverified results are shown as gaps. Hover over a point to see the percentage of the limit and change from the previous survey.</p>
+      </div>
+    </section>
+
+    <section class="survey-trend-section" aria-label="Survey trend analysis">
+      <button id="survey-trend-toggle" class="comparison-toggle" type="button" aria-expanded="false" aria-controls="survey-trend-panel">
+        Show survey trend analysis
+      </button>
+      <div id="survey-trend-panel" class="comparison-panel" hidden>
+        <div class="comparison-heading">
+          <div>
+            <p class="panel-kicker">Monitoring network over time</p>
+            <h2>Survey trend analysis</h2>
+            <p id="survey-trend-summary">Compares the network median NO₂ concentration between verified monitoring rounds.</p>
+          </div>
+        </div>
+        <div class="survey-trend-chart-wrap">
+          <canvas id="survey-trend-chart" aria-label="Network median NO2 across monitoring surveys"></canvas>
+        </div>
+        <div class="survey-trend-table-wrap">
+          <table class="survey-trend-table">
+            <thead><tr><th>Survey</th><th>Median NO₂</th><th>Difference</th><th>Change</th><th>Direction</th></tr></thead>
+            <tbody id="survey-trend-table-body"></tbody>
+          </table>
+        </div>
+        <p class="comparison-footnote">Each survey uses valid outdoor monitoring results only. Improving means the network median is at least 5% lower than the previous verified survey; deteriorating means at least 5% higher; changes within ±5% are shown as stable.</p>
       </div>
     </section>
 

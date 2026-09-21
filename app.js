@@ -41,7 +41,11 @@ const els = {
   performanceToggle: document.getElementById('performance-toggle'),
   performancePanel: document.getElementById('performance-panel'),
   bestPerformingList: document.getElementById('best-performing-list'),
-  worstPerformingList: document.getElementById('worst-performing-list')
+  worstPerformingList: document.getElementById('worst-performing-list'),
+  surveyTrendToggle: document.getElementById('survey-trend-toggle'),
+  surveyTrendPanel: document.getElementById('survey-trend-panel'),
+  surveyTrendSummary: document.getElementById('survey-trend-summary'),
+  surveyTrendTableBody: document.getElementById('survey-trend-table-body')
 };
 
 let sites = [];
@@ -51,6 +55,7 @@ let selectedSiteRef = null;
 let historyChart = null;
 let comparisonChart = null;
 let siteHistoryChart = null;
+let surveyTrendChart = null;
 let comparisonSort = 'desc';
 const markers = new Map();
 
@@ -708,6 +713,126 @@ function setupComparisonToggle() {
 }
 
 
+
+function surveyNetworkStats(survey) {
+  if (!survey || survey.status !== 'verified') return null;
+  const values = Object.values(survey.results || {}).filter(v => typeof v === 'number' && Number.isFinite(v));
+  if (!values.length) return null;
+  return {
+    count: values.length,
+    median: median(values),
+    mean: values.reduce((sum, value) => sum + value, 0) / values.length,
+    low: Math.min(...values),
+    high: Math.max(...values)
+  };
+}
+
+function surveyDirection(changePct) {
+  if (changePct === null || !Number.isFinite(changePct)) return { label: '—', arrow: '', cls: '' };
+  if (changePct <= -5) return { label: 'Improving', arrow: '↓', cls: 'trend-improving' };
+  if (changePct >= 5) return { label: 'Deteriorating', arrow: '↑', cls: 'trend-deteriorating' };
+  return { label: 'Stable', arrow: '→', cls: 'trend-stable' };
+}
+
+function renderSurveyTrendAnalysis() {
+  if (!els.surveyTrendPanel || els.surveyTrendPanel.hidden) return;
+
+  const rows = surveys.map((survey, index) => {
+    const stats = surveyNetworkStats(survey);
+    let previous = null;
+    for (let i = index - 1; i >= 0; i--) {
+      const candidate = surveyNetworkStats(surveys[i]);
+      if (candidate) { previous = { survey: surveys[i], stats: candidate }; break; }
+    }
+    const diff = stats && previous ? stats.median - previous.stats.median : null;
+    const changePct = stats && previous && previous.stats.median !== 0
+      ? (diff / previous.stats.median) * 100 : null;
+    return { survey, index, stats, previous, diff, changePct, direction: surveyDirection(changePct) };
+  });
+
+  const usable = rows.filter(row => row.stats);
+  const selected = rows[surveyIndex];
+
+  if (selected?.stats) {
+    if (selected.previous) {
+      const sign = selected.diff > 0 ? '+' : '';
+      const pctSign = selected.changePct > 0 ? '+' : '';
+      els.surveyTrendSummary.innerHTML = `<strong>${selected.direction.arrow} ${selected.direction.label}</strong> — ${selected.survey.label} network median: ${formatNumber(selected.stats.median)} µg/m³. ` +
+        `Difference from ${selected.previous.survey.label}: ${sign}${formatNumber(selected.diff)} µg/m³ (${pctSign}${formatNumber(selected.changePct)}%).`;
+    } else {
+      els.surveyTrendSummary.innerHTML = `<strong>${selected.survey.label}</strong> — network median: ${formatNumber(selected.stats.median)} µg/m³. This is the first verified survey available for comparison.`;
+    }
+  } else {
+    els.surveyTrendSummary.textContent = `${selected?.survey?.label || 'Selected survey'} does not have verified results available for network comparison.`;
+  }
+
+  els.surveyTrendTableBody.innerHTML = rows.map(row => {
+    const selectedClass = row.index === surveyIndex ? ' class="survey-trend-selected"' : '';
+    if (!row.stats) {
+      return `<tr${selectedClass}><td>${row.survey.label}</td><td>—</td><td>—</td><td>—</td><td>${row.survey.status === 'pending' ? 'Pending' : 'No valid results'}</td></tr>`;
+    }
+    const diffText = row.diff === null ? '—' : `${row.diff > 0 ? '+' : ''}${formatNumber(row.diff)} µg/m³`;
+    const pctText = row.changePct === null ? '—' : `${row.changePct > 0 ? '+' : ''}${formatNumber(row.changePct)}%`;
+    const directionText = row.changePct === null ? '—' : `${row.direction.arrow} ${row.direction.label}`;
+    return `<tr${selectedClass}><td>${row.survey.label}</td><td>${formatNumber(row.stats.median)} µg/m³</td><td>${diffText}</td><td>${pctText}</td><td><span class="${row.direction.cls}">${directionText}</span></td></tr>`;
+  }).join('');
+
+  const canvas = document.getElementById('survey-trend-chart');
+  if (!canvas) return;
+  if (surveyTrendChart) surveyTrendChart.destroy();
+  surveyTrendChart = new Chart(canvas, {
+    type: 'line',
+    data: {
+      labels: usable.map(row => row.survey.label.replace('June ', 'Jun ').replace('July ', 'Jul ').replace('December ', 'Dec ')),
+      datasets: [{
+        label: 'Network median NO₂',
+        data: usable.map(row => row.stats.median),
+        borderWidth: 2,
+        pointRadius: usable.map(row => row.index === surveyIndex ? 6 : 4),
+        pointHoverRadius: 7,
+        tension: 0.18,
+        fill: false
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode: 'nearest', intersect: false },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            afterLabel: context => {
+              const row = usable[context.dataIndex];
+              const parts = [`${row.stats.count} valid outdoor sites`];
+              if (row.changePct !== null) parts.push(`${row.direction.arrow} ${row.direction.label}: ${row.changePct > 0 ? '+' : ''}${formatNumber(row.changePct)}% from previous verified survey`);
+              return parts;
+            }
+          }
+        }
+      },
+      scales: {
+        y: { title: { display: true, text: 'Median NO₂ (µg/m³)' }, beginAtZero: false },
+        x: { ticks: { maxRotation: 45, minRotation: 0 } }
+      }
+    }
+  });
+}
+
+function setupSurveyTrendAnalysis() {
+  if (!els.surveyTrendToggle || !els.surveyTrendPanel) return;
+  els.surveyTrendToggle.addEventListener('click', () => {
+    const willOpen = els.surveyTrendPanel.hidden;
+    els.surveyTrendPanel.hidden = !willOpen;
+    els.surveyTrendToggle.setAttribute('aria-expanded', String(willOpen));
+    els.surveyTrendToggle.textContent = willOpen ? 'Hide survey trend analysis' : 'Show survey trend analysis';
+    if (willOpen) {
+      renderSurveyTrendAnalysis();
+      requestAnimationFrame(() => surveyTrendChart?.resize());
+    }
+  });
+}
+
 function siteTrendPerformance(site) {
   const rows = surveys
     .filter(survey => survey.status === 'verified')
@@ -818,6 +943,7 @@ function setSurvey(index) {
   if (!els.siteHistoryPanel.hidden) updateSiteHistorySummary(els.siteHistorySelect.value || selectedSiteRef || sites[0]?.site_ref);
   updateSummary();
   renderComparisonChart();
+  renderSurveyTrendAnalysis();
   renderPerformanceSummary();
   if (selectedSiteRef) selectSite(selectedSiteRef, false);
   else updateUrl();
@@ -858,6 +984,7 @@ Promise.all([
   setupComparisonToggle();
   setupSortToggle();
   setupSiteHistoryComparison();
+  setupSurveyTrendAnalysis();
   setupPerformanceSummary();
 
   const bounds = [];
