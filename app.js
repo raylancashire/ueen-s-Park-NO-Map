@@ -871,8 +871,9 @@ Promise.all([
   });
   if (bounds.length) map.fitBounds(bounds, { padding: [28, 28] });
 
-  // Map extras: keep these deliberately isolated from survey/data logic.
-  // Home button returns the map to all monitoring sites.
+
+  // Map display controls only. These do not alter survey or NO2 analysis logic.
+  // Home button: return to a view containing all monitoring sites.
   if (bounds.length) {
     const monitoringBounds = L.latLngBounds(bounds);
     const HomeControl = L.Control.extend({
@@ -896,20 +897,8 @@ Promise.all([
     map.addControl(new HomeControl());
   }
 
-  // Queen's Park ward boundary (GSS E05013804).
-  // Register the overlay immediately so Leaflet's standard Layers icon is
-  // always visible in the top-right, even while the boundary is loading.
-  // The layer group is NOT added to the map, so the boundary is OFF by default.
-  const wardBoundaryLayer = L.layerGroup();
-  L.control.layers(null, {
-    "Queen's Park ward boundary": wardBoundaryLayer
-  }, {
-    position: 'topright',
-    collapsed: true
-  }).addTo(map);
-
-  // Load the boundary independently. A failed request cannot interrupt the
-  // NO2 map, markers, survey selector or analysis.
+  // Optional Queen's Park ward boundary. It is OFF by default and can be
+  // enabled from Leaflet's standard Layers control in the top-right.
   const wardBoundaryUrl = "https://gis.london.gov.uk/arcgis/rest/services/apps/webmap_context_layer/FeatureServer/18/query?where=ward_code%3D%27E05013804%27&outFields=ward_name%2Cward_code&outSR=4326&f=geojson";
   fetch(wardBoundaryUrl)
     .then(r => {
@@ -918,12 +907,19 @@ Promise.all([
     })
     .then(geojson => {
       if (!geojson?.features?.length) throw new Error("Queen's Park boundary was not returned");
-      L.geoJSON(geojson, {
+      const wardBoundaryLayer = L.geoJSON(geojson, {
         style: { color: '#d7191c', weight: 3, opacity: 0.95, fill: false },
         interactive: false
-      }).addTo(wardBoundaryLayer);
+      });
+
+      L.control.layers(null, {
+        "Queen's Park ward boundary": wardBoundaryLayer
+      }, {
+        position: 'topright',
+        collapsed: true
+      }).addTo(map);
     })
-    .catch(error => console.warn('Queen\'s Park boundary could not be displayed:', error));
+    .catch(error => console.warn("Queen's Park boundary could not be loaded:", error));
 
   const params = new URLSearchParams(window.location.search);
   const requestedSurvey = params.get('survey');
