@@ -13,7 +13,7 @@
     <header class="page-header">
       <p class="eyebrow">Queen's Park community air quality monitoring</p>
       <h1>NO₂ Monitoring Map</h1>
-      <p class="intro">Choose a survey date, then select a monitoring point to see the result, change from the previous survey and the site's historical trend.</p>
+      <p class="intro">Choose a survey date to see the overall monitoring-network result and historical direction, or select a monitoring point to analyse an individual location.</p>
     </header>
 
     <section class="survey-toolbar" aria-label="Survey date controls">
@@ -46,9 +46,25 @@
       </div>
 
       <aside id="site-panel" class="site-panel" aria-live="polite">
-        <p class="panel-kicker">Selected monitoring site</p>
-        <h2 id="panel-ref">Choose a marker</h2>
-        <p id="panel-location">Click any numbered monitoring point on the map.</p>
+        <p id="panel-kicker" class="panel-kicker">Overall monitoring network</p>
+        <h2 id="panel-ref">Overall NO₂ analysis</h2>
+        <p id="panel-location">Showing the selected survey across all outdoor monitoring locations.</p>
+
+        <div id="overall-panel" class="result-panel">
+          <div class="result-main">
+            <span id="overall-survey" class="result-label"></span>
+            <strong id="overall-median">—</strong>
+            <span class="unit">µg/m³ median</span>
+          </div>
+          <div id="overall-direction" class="change-box"></div>
+          <div id="overall-stats" style="margin-top:.8rem; line-height:1.55"></div>
+          <div class="chart-wrap" style="margin-top:1rem; min-height:250px">
+            <h3>Historical network trend</h3>
+            <canvas id="overall-history-chart" aria-label="Historical overall NO2 network trend"></canvas>
+          </div>
+        </div>
+
+        <button id="show-overall" class="nav-button" type="button" hidden style="margin-bottom:1rem">Show overall analysis</button>
 
         <div id="result-panel" class="result-panel" hidden>
           <div class="result-main">
