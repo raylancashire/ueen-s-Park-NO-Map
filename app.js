@@ -871,6 +871,57 @@ Promise.all([
   });
   if (bounds.length) map.fitBounds(bounds, { padding: [28, 28] });
 
+  // Map extras: keep these deliberately isolated from survey/data logic.
+  // Home button returns the map to all monitoring sites.
+  if (bounds.length) {
+    const monitoringBounds = L.latLngBounds(bounds);
+    const HomeControl = L.Control.extend({
+      options: { position: 'topleft' },
+      onAdd: function () {
+        const container = L.DomUtil.create('div', 'leaflet-bar leaflet-control');
+        const link = L.DomUtil.create('a', '', container);
+        link.href = '#';
+        link.title = 'Show all monitoring sites';
+        link.setAttribute('aria-label', 'Show all monitoring sites');
+        link.innerHTML = '&#8962;';
+        link.style.fontSize = '22px';
+        link.style.lineHeight = '30px';
+        link.style.textAlign = 'center';
+        L.DomEvent.disableClickPropagation(container);
+        L.DomEvent.on(link, 'click', L.DomEvent.stop)
+          .on(link, 'click', () => map.fitBounds(monitoringBounds, { padding: [28, 28] }));
+        return container;
+      }
+    });
+    map.addControl(new HomeControl());
+  }
+
+  // Queen's Park ward boundary (GSS E05013804). This is optional: if the
+  // external boundary service is unavailable, the NO2 map continues normally.
+  const wardBoundaryUrl = "https://gis.london.gov.uk/arcgis/rest/services/apps/webmap_context_layer/FeatureServer/18/query?where=ward_code%3D%27E05013804%27&outFields=ward_name%2Cward_code&outSR=4326&f=geojson";
+  fetch(wardBoundaryUrl)
+    .then(r => {
+      if (!r.ok) throw new Error(`Queen's Park boundary unavailable (${r.status})`);
+      return r.json();
+    })
+    .then(geojson => {
+      if (!geojson?.features?.length) throw new Error("Queen's Park boundary was not returned");
+      const wardBoundaryLayer = L.geoJSON(geojson, {
+        style: { color: '#d7191c', weight: 3, opacity: 0.95, fill: false },
+        interactive: false
+      });
+
+      // Optional overlay control: boundary is OFF by default and can be
+      // switched on/off without affecting the NO2 markers or survey state.
+      L.control.layers(null, {
+        "Queen's Park ward boundary": wardBoundaryLayer
+      }, {
+        position: 'topright',
+        collapsed: true
+      }).addTo(map);
+    })
+    .catch(error => console.warn('Queen\'s Park boundary could not be displayed:', error));
+
   const params = new URLSearchParams(window.location.search);
   const requestedSurvey = params.get('survey');
   const requestedSite = params.get('site')?.toUpperCase();
