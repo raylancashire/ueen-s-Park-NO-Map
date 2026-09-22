@@ -829,7 +829,20 @@ function renderSurveyTrendAnalysis() {
         pointHoverRadius: 7,
         tension: 0.18,
         fill: false
-      }]
+      }, ...(medianTrend ? [{
+        label: 'Trend line (median NO₂)',
+        data: medianTrend.values,
+        borderColor: '#15803d',
+        backgroundColor: '#15803d',
+        borderWidth: 2,
+        borderDash: [8, 5],
+        pointRadius: 0,
+        pointHoverRadius: 0,
+        hitRadius: 0,
+        tension: 0,
+        fill: false,
+        order: 2
+      }] : [])]
     },
     options: {
       responsive: true,
