@@ -135,31 +135,6 @@
       </div>
     </section>
 
-    <section class="survey-trend-section" aria-label="Survey trend analysis">
-      <button id="survey-trend-toggle" class="comparison-toggle" type="button" aria-expanded="false" aria-controls="survey-trend-panel">
-        Show survey trend analysis
-      </button>
-      <div id="survey-trend-panel" class="comparison-panel" hidden>
-        <div class="comparison-heading">
-          <div>
-            <p class="panel-kicker">Monitoring network over time</p>
-            <h2>Survey trend analysis</h2>
-            <p id="survey-trend-summary">Compares the network median NO₂ concentration between verified monitoring rounds.</p>
-          </div>
-        </div>
-        <div class="survey-trend-chart-wrap">
-          <canvas id="survey-trend-chart" aria-label="Network median NO2 across monitoring surveys"></canvas>
-        </div>
-        <div class="survey-trend-table-wrap">
-          <table class="survey-trend-table">
-            <thead><tr><th>Survey</th><th>Median NO₂</th><th>Difference</th><th>Change</th><th>Direction</th></tr></thead>
-            <tbody id="survey-trend-table-body"></tbody>
-          </table>
-        </div>
-        <p class="comparison-footnote">Each survey uses valid outdoor monitoring results only. Improving means the network median is at least 5% lower than the previous verified survey; deteriorating means at least 5% higher; changes within ±5% are shown as stable.</p>
-      </div>
-    </section>
-
     <section class="performance-section" aria-label="Best and worst performing locations">
       <button id="performance-toggle" class="comparison-toggle" type="button" aria-expanded="false" aria-controls="performance-panel">
         Show best &amp; worst performing locations
@@ -187,6 +162,31 @@
     </section>
 
 
+
+    <section class="survey-trend-section" aria-label="Survey trend analysis">
+      <button id="survey-trend-toggle" class="comparison-toggle" type="button" aria-expanded="false" aria-controls="survey-trend-panel">
+        Show survey trend analysis
+      </button>
+      <div id="survey-trend-panel" class="comparison-panel" hidden>
+        <div class="comparison-heading">
+          <div>
+            <p class="panel-kicker">Monitoring network over time</p>
+            <h2>Survey trend analysis</h2>
+            <p id="survey-trend-summary">Compares the network median NO₂ concentration between verified monitoring rounds.</p>
+          </div>
+        </div>
+        <div class="survey-trend-chart-wrap">
+          <canvas id="survey-trend-chart" aria-label="Network median NO2 across monitoring surveys"></canvas>
+        </div>
+        <div class="survey-trend-table-wrap">
+          <table class="survey-trend-table">
+            <thead><tr><th>Survey</th><th>Median NO₂</th><th>Difference</th><th>Change</th><th>Direction</th></tr></thead>
+            <tbody id="survey-trend-table-body"></tbody>
+          </table>
+        </div>
+        <p class="comparison-footnote">Each survey uses valid outdoor monitoring results only. Improving means the network median is at least 5% lower than the previous verified survey; deteriorating means at least 5% higher; changes within ±5% are shown as stable.</p>
+      </div>
+    </section>
 
     <footer class="page-footer">
       <span>Outdoor monitoring locations QP01–QP18</span>
