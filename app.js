@@ -146,6 +146,29 @@ function popupHtml(site) {
   return `<div class="popup-ref">${site.site_ref}</div><div class="popup-location">${site.location}</div>${result}`;
 }
 
+// Keep the selected site's concentration indicator in sync with the map survey.
+function updateSelectedConcentrationMarker() {
+  const indicator = document.getElementById('selected-concentration-marker');
+  const caption = document.getElementById('selected-scale-result');
+  if (!indicator || !caption) return;
+  const value = selectedSiteRef ? valueFor(selectedSiteRef) : null;
+  if (value === null || value === undefined || !Number.isFinite(Number(value))) {
+    indicator.hidden = true;
+    indicator.style.display = 'none';
+    caption.hidden = !selectedSiteRef;
+    caption.textContent = selectedSiteRef ? `${selectedSiteRef}: no valid result for this survey` : '';
+    return;
+  }
+  // The displayed legend runs from 13 to 97+ µg/m³.
+  const position = Math.max(0, Math.min(100, (Number(value) - 13) / (97 - 13) * 100));
+  indicator.style.left = `${position}%`;
+  indicator.title = `${selectedSiteRef}: ${formatNumber(value)} µg/m³`;
+  indicator.hidden = false;
+  indicator.style.display = 'block';
+  caption.textContent = `${selectedSiteRef}: ${formatNumber(value)} µg/m³`;
+  caption.hidden = false;
+}
+
 function updateMarkers() {
   sites.forEach(site => {
     const entry = markers.get(site.site_ref);
@@ -1100,6 +1123,7 @@ function selectSite(siteRef, openPopup = false) {
   if (els.siteHistorySelect) els.siteHistorySelect.value = siteRef;
   renderSiteHistoryChart(siteRef);
   updateUrl();
+  updateSelectedConcentrationMarker();
 
   if (openPopup) entry.marker.openPopup();
 }
@@ -1108,6 +1132,7 @@ function setSurvey(index) {
   surveyIndex = Math.max(0, Math.min(index, surveys.length - 1));
   updateSurveyControls();
   updateMarkers();
+  updateSelectedConcentrationMarker();
   if (!els.siteHistoryPanel.hidden) updateSiteHistorySummary(els.siteHistorySelect.value || selectedSiteRef || sites[0]?.site_ref);
   updateSummary();
   renderComparisonChart();
