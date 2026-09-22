@@ -16,6 +16,20 @@
       box-shadow: -1px 0 #17222b, 1px 0 #17222b;
       pointer-events: none; z-index: 2;
     }
+    .map-legend .colour-ramp .scale-band-tick {
+      position: absolute; top: 0; bottom: 0; width: 1px;
+      background: rgba(22, 32, 39, .65); pointer-events: none; z-index: 1;
+    }
+    .map-legend .colour-ramp .legal-limit-tick {
+      position: absolute; top: -5px; bottom: -5px; width: 2px;
+      background: #101b24; pointer-events: none; z-index: 2;
+    }
+    .map-legend .colour-ramp .selected-concentration-marker::before {
+      content: ""; position: absolute; bottom: calc(100% + 2px); left: 50%;
+      transform: translateX(-50%); border-left: 6px solid transparent;
+      border-right: 6px solid transparent; border-top: 8px solid var(--selected-band-colour, #111);
+      filter: drop-shadow(0 0 1px #111);
+    }
     .map-legend .selected-scale-result {
       display: block; margin-top: 5px; font-size: .76rem;
       font-weight: 700; color: #173c32;
@@ -103,11 +117,11 @@
         <div id="map" role="application" aria-label="Interactive map of Queen's Park NO2 monitoring locations"></div>
         <div class="map-legend" aria-label="Map legend">
           <strong>Marker = NO₂ result rounded to nearest whole number</strong>
-          <div class="colour-ramp" aria-hidden="true"><span id="selected-concentration-marker" class="selected-concentration-marker" hidden></span></div>
+          <div class="colour-ramp" aria-hidden="true"><span class="legal-limit-tick" style="left:32.738095%" title="40 µg/m³ annual mean legal limit"></span><span id="selected-concentration-marker" class="selected-concentration-marker" hidden></span></div>
           <span id="selected-scale-result" class="selected-scale-result" hidden aria-live="polite"></span>
           <span class="legend-range">13 <span>← concentration colour scale →</span> 97+</span>
           <span><i class="swatch band-missing"></i>No result</span>
-          <small>Marker colour follows the supplied concentration chart. 40 µg/m³ is highlighted on the source chart.</small>
+          <small>Discrete 3 µg/m³ colour bands match the map markers. The thicker tick marks the 40 µg/m³ annual mean legal limit.</small>
         </div>
       </div>
 

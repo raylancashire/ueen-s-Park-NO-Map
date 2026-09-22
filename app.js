@@ -77,6 +77,17 @@ const no2ColourScale = [
   [97, '#331a1a']
 ];
 
+// Display-only labels: preserve original full addresses in the site data.
+function displayLocation(location) {
+  let name = String(location || '').trim();
+  // Put named landmarks first, without their street number.
+  const landmark = name.match(/^\d+[A-Za-z]?\s+(.+?)\s*\(([^)]+(?:\([^)]*\)[^)]*)?)\)$/);
+  if (landmark) return `${landmark[2]}, ${landmark[1]}`;
+  // Standard property numbers, including number ranges, e.g. 119 or 3–7.
+  name = name.replace(/^\d+[A-Za-z]?(?:\s*[-–]\s*\d+[A-Za-z]?)?\s+/, '');
+  return name;
+}
+
 function roundedResult(value) {
   if (value === null || value === undefined || Number.isNaN(value)) return null;
   return Math.round(Number(value));
@@ -143,7 +154,7 @@ function popupHtml(site) {
     : value === null
       ? `<div class="popup-note">No valid result for this survey.</div>`
       : `<div class="popup-result">${formatNumber(value)} µg/m³ <span class="popup-rounded">(marker ${roundedResult(value)})</span></div>`;
-  return `<div class="popup-ref">${site.site_ref}</div><div class="popup-location">${site.location}</div>${result}`;
+  return `<div class="popup-ref">${site.site_ref}</div><div class="popup-location">${displayLocation(site.location)}</div>${result}`;
 }
 
 // Build the legend from the SAME concentration bands as the numbered map markers.
@@ -156,6 +167,7 @@ function syncLegendToMarkerColours() {
   const max = 97;
   const pct = value => Math.max(0, Math.min(100, (value - min) / (max - min) * 100));
   const stops = [];
+  const boundaries = [];
   let previousBoundary = min;
   no2ColourScale.forEach(([upper, colour], index) => {
     const nextUpper = no2ColourScale[index + 1]?.[0];
@@ -164,9 +176,20 @@ function syncLegendToMarkerColours() {
     if (boundary < previousBoundary) return;
     stops.push(`${colour} ${pct(previousBoundary).toFixed(4)}%`);
     stops.push(`${colour} ${pct(boundary).toFixed(4)}%`);
+    if (nextUpper !== undefined) boundaries.push(pct(boundary));
     previousBoundary = boundary;
   });
+  // Discrete bands, separated by thin ticks. Use the same boundaries as colourFor().
+  const ticks = boundaries.map(pos => `rgba(17, 34, 43, .55) ${pos.toFixed(4)}%, rgba(17, 34, 43, .55) calc(${pos.toFixed(4)}% + 1px), transparent calc(${pos.toFixed(4)}% + 1px)`).join(', ');
   ramp.style.background = `linear-gradient(to right, ${stops.join(', ')})`;
+  // Tick marks are separate DOM elements so they do not change the colour bands.
+  ramp.querySelectorAll('.scale-band-tick').forEach(node => node.remove());
+  boundaries.forEach(pos => {
+    const tick = document.createElement('span');
+    tick.className = 'scale-band-tick';
+    tick.style.left = `${pos}%`;
+    ramp.appendChild(tick);
+  });
 }
 
 // Keep the selected site's concentration indicator in sync with the map survey.
@@ -186,6 +209,7 @@ function updateSelectedConcentrationMarker() {
   // The displayed legend runs from 13 to 97+ µg/m³.
   const position = Math.max(0, Math.min(100, (Number(value) - 13) / (97 - 13) * 100));
   indicator.style.left = `${position}%`;
+  indicator.style.setProperty('--selected-band-colour', colourFor(value));
   indicator.title = `${selectedSiteRef}: ${formatNumber(value)} µg/m³`;
   indicator.hidden = false;
   indicator.style.display = 'block';
@@ -323,7 +347,7 @@ function renderComparisonChart() {
   const focusedSite = selectedSiteRef ? sites.find(s => s.site_ref === selectedSiteRef) : null;
   const sortDescription = comparisonSort === 'desc' ? 'highest to lowest' : 'lowest to highest';
   els.comparisonNote.textContent = focusedSite
-    ? `Location in focus: ${focusedSite.site_ref} — ${focusedSite.location}. Locations are ranked from ${sortDescription} percentage of the 40 µg/m³ annual mean legal limit. Labels also show change from the previous survey.`
+    ? `Location in focus: ${focusedSite.site_ref} — ${displayLocation(focusedSite.location)}. Locations are ranked from ${sortDescription} percentage of the 40 µg/m³ annual mean legal limit. Labels also show change from the previous survey.`
     : `Locations are ranked from ${sortDescription} percentage of the 40 µg/m³ annual mean legal limit. Labels also show change from the previous survey. Select a monitoring point on the map to highlight that location.`;
 
   // Build one row per monitoring location. Sort valid results only, then append
@@ -354,7 +378,7 @@ function renderComparisonChart() {
 
   const rows = [...validRows, ...missingRows];
 
-  const labels = rows.map(row => `${row.site.site_ref} — ${row.site.location}`);
+  const labels = rows.map(row => `${row.site.site_ref} — ${displayLocation(row.site.location)}`);
   const values = rows.map(row => row.value === null ? 0 : row.value);
   const backgroundColors = rows.map(row => row.value === null ? '#b5bdc3' : colourFor(row.value));
   const borderColors = rows.map(row => row.site.site_ref === selectedSiteRef ? '#17222b' : '#ffffff');
@@ -514,7 +538,7 @@ function renderSiteHistoryChart(siteRef = null) {
   if (!site) return;
 
   if (els.siteHistorySelect.value !== site.site_ref) els.siteHistorySelect.value = site.site_ref;
-  els.siteHistoryTitle.textContent = `${site.site_ref} — ${site.location}`;
+  els.siteHistoryTitle.textContent = `${site.site_ref} — ${displayLocation(site.location)}`;
 
   const rows = surveys.map((survey, index) => {
     const value = survey.status === 'verified' && typeof survey.results?.[site.site_ref] === 'number' && Number.isFinite(survey.results[site.site_ref])
@@ -714,7 +738,7 @@ function setupSiteHistoryComparison() {
   sites.forEach(site => {
     const option = document.createElement('option');
     option.value = site.site_ref;
-    option.textContent = `${site.site_ref} — ${site.location}`;
+    option.textContent = `${site.site_ref} — ${displayLocation(site.location)}`;
     els.siteHistorySelect.appendChild(option);
   });
 
@@ -1083,7 +1107,7 @@ function performanceItemHtml(item, kind) {
   const overall = item.overallPct === null ? '—' : `${item.overallPct > 0 ? '+' : ''}${formatNumber(item.overallPct)}% overall`;
   return `<button class="performance-item ${kind}" type="button" data-site-ref="${item.site.site_ref}">
     <span class="performance-rank"></span>
-    <span class="performance-site"><strong>${item.site.site_ref}</strong><small>${item.site.location}</small></span>
+    <span class="performance-site"><strong>${item.site.site_ref}</strong><small>${displayLocation(item.site.location)}</small></span>
     <span class="performance-metrics ${cls}"><strong>${arrow} ${formatNumber(Math.abs(item.slope), 2)} µg/m³/yr</strong><small>${overall}</small></span>
   </button>`;
 }
@@ -1131,7 +1155,7 @@ function selectSite(siteRef, openPopup = false) {
   selectedSiteRef = siteRef;
 
   els.panelRef.textContent = site.site_ref;
-  els.panelLocation.textContent = site.location;
+  els.panelLocation.textContent = displayLocation(site.location);
   els.panelLat.textContent = site.lat.toFixed(6);
   els.panelLon.textContent = site.lon.toFixed(6);
   els.panelCoordinates.hidden = false;
