@@ -835,12 +835,8 @@ function renderSurveyTrendAnalysis() {
       responsive: true,
       maintainAspectRatio: false,
       interaction: { mode: 'nearest', intersect: false },
-      onClick: (event, _elements, chart) => {
-        // Resolve the nearest survey by its x-position, regardless of whether
-        // Chart.js considers the dashed trend line the closest dataset.
-        const medianPoint = chart.getElementsAtEventForMode(
-          event, 'index', { intersect: false }, false
-        ).find(element => element.datasetIndex === 0);
+      onClick: (_event, elements) => {
+        const medianPoint = elements.find(element => element.datasetIndex === 0);
         if (!medianPoint) return;
         const chosen = usable[medianPoint.index];
         if (!chosen) return;
