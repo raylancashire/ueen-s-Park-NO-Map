@@ -146,8 +146,32 @@ function popupHtml(site) {
   return `<div class="popup-ref">${site.site_ref}</div><div class="popup-location">${site.location}</div>${result}`;
 }
 
+// Build the legend from the SAME concentration bands as the numbered map markers.
+// Each band ends halfway between whole-number readings; the selected site's
+// indicator can therefore sit at its exact measured value and still match.
+function syncLegendToMarkerColours() {
+  const ramp = document.querySelector('.colour-ramp');
+  if (!ramp) return;
+  const min = 13;
+  const max = 97;
+  const pct = value => Math.max(0, Math.min(100, (value - min) / (max - min) * 100));
+  const stops = [];
+  let previousBoundary = min;
+  no2ColourScale.forEach(([upper, colour], index) => {
+    const nextUpper = no2ColourScale[index + 1]?.[0];
+    // colourFor() rounds to whole numbers, then uses the first upper bound.
+    const boundary = nextUpper === undefined ? max : Math.min(max, upper + 0.5);
+    if (boundary < previousBoundary) return;
+    stops.push(`${colour} ${pct(previousBoundary).toFixed(4)}%`);
+    stops.push(`${colour} ${pct(boundary).toFixed(4)}%`);
+    previousBoundary = boundary;
+  });
+  ramp.style.background = `linear-gradient(to right, ${stops.join(', ')})`;
+}
+
 // Keep the selected site's concentration indicator in sync with the map survey.
 function updateSelectedConcentrationMarker() {
+  syncLegendToMarkerColours();
   const indicator = document.getElementById('selected-concentration-marker');
   const caption = document.getElementById('selected-scale-result');
   if (!indicator || !caption) return;
