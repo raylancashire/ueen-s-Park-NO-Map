@@ -913,7 +913,8 @@ function renderSurveyPerformance() {
       headingButton.hidden = !items.length;
       headingButton.disabled = !items.length;
       headingButton.setAttribute('aria-pressed', String(isSelected));
-      headingButton.textContent = isSelected ? 'Deselect all three' : 'Select all three';
+      headingButton.textContent = isSelected ? 'Deselect all' : 'Select all';
+      headingButton.setAttribute('aria-label', `${isSelected ? 'Deselect' : 'Select'} all ${headingButton.closest('.survey-performance-heading')?.querySelector('h3')?.textContent || 'surveys'} on chart and list`);
     }
     if (target) target.innerHTML = items.length
       ? items.map((row, i) => surveyPerformanceItem(row, i + 1, changeMode, id)).join('')
