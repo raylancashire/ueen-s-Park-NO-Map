@@ -18,6 +18,10 @@
     .survey-performance-section .performance-grid { row-gap: 1.5rem; }
     .survey-performance-section .performance-item { width: 100%; text-align: left; cursor: pointer; }
     .survey-performance-section .performance-item[aria-current="true"] { outline: 2px solid #18704f; outline-offset: 2px; }
+    .survey-trend-grouped { background: rgba(139, 92, 246, .17) !important; box-shadow: inset 4px 0 #7c3aed; }
+    .survey-performance-grouped { outline: 2px solid #7c3aed; background: rgba(139, 92, 246, .10); }
+    .survey-group-button { display: block; width: 100%; margin: .4rem 0 .8rem; padding: .65rem; border: 1px solid #7c3aed; border-radius: 6px; color: #5b21b6; background: #f5f3ff; cursor: pointer; font-weight: 600; }
+    .survey-group-button[aria-pressed="true"] { background: #ddd6fe; }
     .trend-improving { color: #18704f; font-weight: 700; }
     .trend-deteriorating { color: #a3362d; font-weight: 700; }
     .trend-stable { color: #5f6870; font-weight: 700; }
@@ -209,7 +213,7 @@
           <div class="performance-group performance-best"><h3>Largest improvements</h3><div id="survey-improved-list" class="performance-list"></div></div>
           <div class="performance-group performance-worst"><h3>Largest deteriorations</h3><div id="survey-deteriorated-list" class="performance-list"></div></div>
         </div>
-        <p class="comparison-footnote">Only verified rounds with valid outdoor results are included. Medians compare different rounds, whose site coverage may vary; changes are relative to the previous verified round. Select a survey to update the map and highlight it in Survey Trend Analysis.</p>
+        <p class="comparison-footnote">Only verified rounds with valid outdoor results are included. Medians compare different rounds, whose site coverage may vary; changes are relative to the previous verified round. Select an individual survey to update the map, or select all three in a category to highlight them together in the chart and survey-round table. The map continues to display one survey at a time.</p>
       </div>
     </section>
 

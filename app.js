@@ -58,6 +58,7 @@ let historyChart = null;
 let comparisonChart = null;
 let siteHistoryChart = null;
 let surveyTrendChart = null;
+let selectedSurveyGroup = null; // { id, indices }; independent of the active map survey
 let comparisonSort = 'desc';
 const markers = new Map();
 
@@ -769,7 +770,8 @@ function renderSurveyTrendAnalysis() {
   }
 
   els.surveyTrendTableBody.innerHTML = rows.map(row => {
-    const selectedClass = row.index === surveyIndex ? ' survey-trend-selected' : '';
+    const grouped = selectedSurveyGroup?.indices.includes(row.index);
+    const selectedClass = `${row.index === surveyIndex ? ' survey-trend-selected' : ''}${grouped ? ' survey-trend-grouped' : ''}`;
     const rowAttrs = ` class="survey-trend-row${selectedClass}" data-survey-index="${row.index}" tabindex="0" aria-selected="${row.index === surveyIndex}"`;
     if (!row.stats) {
       return `<tr${rowAttrs}><td>${row.survey.label}</td><td>—</td><td>—</td><td>—</td><td>${row.survey.status === 'pending' ? 'Pending' : 'No valid results'}</td></tr>`;
@@ -791,8 +793,10 @@ function renderSurveyTrendAnalysis() {
         label: 'Network median NO₂',
         data: usable.map(row => row.stats.median),
         borderWidth: 2,
-        pointRadius: usable.map(row => row.index === surveyIndex ? 8 : 4),
-        pointBackgroundColor: usable.map(row => row.index === surveyIndex ? '#d7191c' : '#2563eb'),
+        pointRadius: usable.map(row => selectedSurveyGroup?.indices.includes(row.index) ? 9 : row.index === surveyIndex ? 8 : 4),
+        pointBackgroundColor: usable.map(row => selectedSurveyGroup?.indices.includes(row.index) ? '#8b5cf6' : row.index === surveyIndex ? '#d7191c' : '#2563eb'),
+        pointBorderColor: usable.map(row => selectedSurveyGroup?.indices.includes(row.index) ? '#5b21b6' : '#ffffff'),
+        pointBorderWidth: usable.map(row => selectedSurveyGroup?.indices.includes(row.index) ? 3 : 1),
         pointHoverRadius: 7,
         tension: 0.18,
         fill: false
@@ -806,6 +810,7 @@ function renderSurveyTrendAnalysis() {
         if (!elements.length) return;
         const chosen = usable[elements[0].index];
         if (!chosen) return;
+        selectedSurveyGroup = null;
         setSurvey(chosen.index);
         els.surveyTrendTableBody.querySelector(`tr[data-survey-index="${chosen.index}"]`)?.scrollIntoView({ block: 'nearest' });
       },
@@ -835,13 +840,14 @@ function setupSurveyTrendAnalysis() {
   // Delegate events so the handlers survive table redraws.
   els.surveyTrendTableBody?.addEventListener('click', event => {
     const row = event.target.closest('tr[data-survey-index]');
-    if (row) setSurvey(Number(row.dataset.surveyIndex));
+    if (row) { selectedSurveyGroup = null; setSurvey(Number(row.dataset.surveyIndex)); }
   });
   els.surveyTrendTableBody?.addEventListener('keydown', event => {
     if (event.key !== 'Enter' && event.key !== ' ') return;
     const row = event.target.closest('tr[data-survey-index]');
     if (!row) return;
     event.preventDefault();
+    selectedSurveyGroup = null;
     setSurvey(Number(row.dataset.surveyIndex));
   });
   els.surveyTrendToggle.addEventListener('click', () => {
@@ -871,7 +877,7 @@ function surveyPerformanceRows() {
   }).filter(Boolean);
 }
 
-function surveyPerformanceItem(row, rank, changeMode = false) {
+function surveyPerformanceItem(row, rank, changeMode = false, groupId = "") {
   const metric = changeMode
     ? `${row.changePct > 0 ? '+' : ''}${formatNumber(row.changePct)}% change`
     : `${formatNumber(row.stats.median)} µg/m³ median`;
@@ -879,7 +885,8 @@ function surveyPerformanceItem(row, rank, changeMode = false) {
     ? `${formatNumber(row.stats.median)} µg/m³ median · ${row.stats.count} sites`
     : `${row.stats.count} valid outdoor sites`;
   const selected = row.index === surveyIndex;
-  return `<button class="performance-item" type="button" data-survey-index="${row.index}" aria-current="${selected}">
+  const grouped = selectedSurveyGroup?.indices.includes(row.index) && selectedSurveyGroup.id === groupId;
+  return `<button class="performance-item${grouped ? " survey-performance-grouped" : ""}" type="button" data-survey-index="${row.index}" aria-current="${selected}">
     <span class="performance-rank">${rank}</span>
     <span class="performance-site"><strong>${row.survey.label}</strong><small>${detail}</small></span>
     <span class="performance-metrics"><strong>${metric}</strong></span>
@@ -901,7 +908,8 @@ function renderSurveyPerformance() {
   groups.forEach(([id, items, changeMode]) => {
     const target = document.getElementById(id);
     if (target) target.innerHTML = items.length
-      ? items.map((row, i) => surveyPerformanceItem(row, i + 1, changeMode)).join('')
+      ? `<button class="survey-group-button" type="button" data-group-id="${id}" aria-pressed="${selectedSurveyGroup?.id === id}">${selectedSurveyGroup?.id === id ? 'Clear group selection' : 'Select all three on chart & list'}</button>` +
+        items.map((row, i) => surveyPerformanceItem(row, i + 1, changeMode, id)).join('')
       : '<p>No qualifying verified surveys.</p>';
   });
 }
@@ -918,10 +926,29 @@ function setupSurveyPerformance() {
     if (opening) renderSurveyPerformance();
   });
   panel.addEventListener('click', event => {
+    const groupButton = event.target.closest('button[data-group-id]');
+    if (groupButton) {
+      const id = groupButton.dataset.groupId;
+      if (selectedSurveyGroup?.id === id) selectedSurveyGroup = null;
+      else {
+        const indices = [...panel.querySelectorAll(`#${id} button[data-survey-index]`)].map(button => Number(button.dataset.surveyIndex));
+        selectedSurveyGroup = { id, indices };
+        if (els.surveyTrendPanel?.hidden) {
+          els.surveyTrendPanel.hidden = false;
+          els.surveyTrendToggle.setAttribute('aria-expanded', 'true');
+          els.surveyTrendToggle.textContent = 'Hide survey trend analysis';
+        }
+      }
+      renderSurveyPerformance();
+      renderSurveyTrendAnalysis();
+      requestAnimationFrame(() => surveyTrendChart?.resize());
+      return;
+    }
     const button = event.target.closest('button[data-survey-index]');
     if (!button) return;
     const index = Number(button.dataset.surveyIndex);
     if (!Number.isInteger(index) || index < 0 || index >= surveys.length) return;
+    selectedSurveyGroup = null;
     setSurvey(index);
     // Open the trend analysis so the chosen survey is also visible there.
     if (els.surveyTrendPanel?.hidden) {
