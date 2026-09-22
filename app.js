@@ -628,7 +628,18 @@ function renderSiteHistoryChart(siteRef = null) {
         pointRadius: 0,
         pointHoverRadius: 0,
         fill: false
-      }]
+      }, ...(medianTrend ? [{
+        label: 'Long-term median trend',
+        data: medianTrend.values,
+        borderColor: '#0f766e',
+        borderWidth: 2.5,
+        borderDash: [8, 5],
+        pointRadius: 0,
+        pointHoverRadius: 0,
+        tension: 0,
+        fill: false,
+        order: 2
+      }] : [])]
     },
     options: {
       responsive: true,
@@ -737,6 +748,19 @@ function surveyDirection(changePct) {
   return { label: 'Stable', arrow: '→', cls: 'trend-stable' };
 }
 
+// Least-squares trend of verified network medians against actual survey dates.
+// Dates, rather than round numbers, account for irregular survey intervals.
+function networkMedianTrend(usable) {
+  if (usable.length < 2) return null;
+  const points = usable.map(row => ({ x: surveyDateValue(row.survey), y: row.stats.median }));
+  const meanX = points.reduce((sum, p) => sum + p.x, 0) / points.length;
+  const meanY = points.reduce((sum, p) => sum + p.y, 0) / points.length;
+  const denominator = points.reduce((sum, p) => sum + (p.x - meanX) ** 2, 0);
+  if (denominator === 0) return null;
+  const slope = points.reduce((sum, p) => sum + (p.x - meanX) * (p.y - meanY), 0) / denominator;
+  return { slope, values: points.map(p => meanY + slope * (p.x - meanX)) };
+}
+
 function renderSurveyTrendAnalysis() {
   if (!els.surveyTrendPanel || els.surveyTrendPanel.hidden) return;
 
@@ -754,6 +778,11 @@ function renderSurveyTrendAnalysis() {
   });
 
   const usable = rows.filter(row => row.stats);
+  const medianTrend = networkMedianTrend(usable);
+  const trendNote = document.getElementById('survey-median-trend-note');
+  if (trendNote) trendNote.textContent = medianTrend
+    ? `Dashed line: long-term linear trend of verified network medians (${medianTrend.slope > 0 ? "+" : ""}${formatNumber(medianTrend.slope, 2)} µg/m³ per year). Based on actual survey dates; individual rounds can vary seasonally and site coverage may differ.`
+    : 'At least two verified surveys are needed to calculate a trend line.';
   const selected = rows[surveyIndex];
 
   if (selected?.stats) {
@@ -807,16 +836,18 @@ function renderSurveyTrendAnalysis() {
       maintainAspectRatio: false,
       interaction: { mode: 'nearest', intersect: false },
       onClick: (_event, elements) => {
-        if (!elements.length) return;
-        const chosen = usable[elements[0].index];
+        const medianPoint = elements.find(element => element.datasetIndex === 0);
+        if (!medianPoint) return;
+        const chosen = usable[medianPoint.index];
         if (!chosen) return;
         selectedSurveyGroup = null;
         setSurvey(chosen.index);
         els.surveyTrendTableBody.querySelector(`tr[data-survey-index="${chosen.index}"]`)?.scrollIntoView({ block: 'nearest' });
       },
       plugins: {
-        legend: { display: false },
+        legend: { display: Boolean(medianTrend), labels: { usePointStyle: true } },
         tooltip: {
+          filter: context => context.datasetIndex === 0,
           callbacks: {
             afterLabel: context => {
               const row = usable[context.dataIndex];
@@ -1150,10 +1181,12 @@ Promise.all([
         link.href = '#';
         link.title = 'Show all monitoring sites';
         link.setAttribute('aria-label', 'Show all monitoring sites');
-        link.innerHTML = '&#8962;';
-        link.style.fontSize = '22px';
-        link.style.lineHeight = '30px';
-        link.style.textAlign = 'center';
+        // Solid house icon; preserve the existing show-all-monitoring-sites action.
+        link.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M12 2 2 10.5h2.5V22h6v-7h3v7h6V10.5H22L12 2Z"/></svg>`;
+        link.style.display = 'flex';
+        link.style.alignItems = 'center';
+        link.style.justifyContent = 'center';
+        link.style.color = '#182e24';
         L.DomEvent.disableClickPropagation(container);
         L.DomEvent.on(link, 'click', L.DomEvent.stop)
           .on(link, 'click', () => map.fitBounds(monitoringBounds, { padding: [28, 28] }));
