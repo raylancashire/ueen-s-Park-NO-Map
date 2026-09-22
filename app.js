@@ -907,9 +907,16 @@ function renderSurveyPerformance() {
   ];
   groups.forEach(([id, items, changeMode]) => {
     const target = document.getElementById(id);
+    const headingButton = panel.querySelector(`button[data-group-id="${id}"]`);
+    if (headingButton) {
+      const isSelected = selectedSurveyGroup?.id === id;
+      headingButton.hidden = !items.length;
+      headingButton.disabled = !items.length;
+      headingButton.setAttribute('aria-pressed', String(isSelected));
+      headingButton.textContent = isSelected ? 'Deselect all three' : 'Select all three';
+    }
     if (target) target.innerHTML = items.length
-      ? `<button class="survey-group-button" type="button" data-group-id="${id}" aria-pressed="${selectedSurveyGroup?.id === id}">${selectedSurveyGroup?.id === id ? 'Clear group selection' : 'Select all three on chart & list'}</button>` +
-        items.map((row, i) => surveyPerformanceItem(row, i + 1, changeMode, id)).join('')
+      ? items.map((row, i) => surveyPerformanceItem(row, i + 1, changeMode, id)).join('')
       : '<p>No qualifying verified surveys.</p>';
   });
 }

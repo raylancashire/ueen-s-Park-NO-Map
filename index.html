@@ -20,7 +20,9 @@
     .survey-performance-section .performance-item[aria-current="true"] { outline: 2px solid #18704f; outline-offset: 2px; }
     .survey-trend-grouped { background: rgba(139, 92, 246, .17) !important; box-shadow: inset 4px 0 #7c3aed; }
     .survey-performance-grouped { outline: 2px solid #7c3aed; background: rgba(139, 92, 246, .10); }
-    .survey-group-button { display: block; width: 100%; margin: .4rem 0 .8rem; padding: .65rem; border: 1px solid #7c3aed; border-radius: 6px; color: #5b21b6; background: #f5f3ff; cursor: pointer; font-weight: 600; }
+    .survey-performance-heading { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .5rem; margin-bottom: .5rem; }
+    .survey-performance-heading h3 { margin: 0; }
+    .survey-group-button { display: inline-flex; align-items: center; justify-content: center; margin: 0; padding: .45rem .7rem; font-size: .85rem; border: 1px solid #7c3aed; border-radius: 6px; color: #5b21b6; background: #f5f3ff; cursor: pointer; font-weight: 600; }
     .survey-group-button[aria-pressed="true"] { background: #ddd6fe; }
     .trend-improving { color: #18704f; font-weight: 700; }
     .trend-deteriorating { color: #a3362d; font-weight: 700; }
@@ -208,10 +210,10 @@
           <p>Compare the three lowest and highest network median NO₂ concentrations, plus the largest changes from the previous verified survey.</p>
         </div></div>
         <div class="performance-grid">
-          <div class="performance-group performance-best"><h3>Lowest median NO₂</h3><div id="survey-best-list" class="performance-list"></div></div>
-          <div class="performance-group performance-worst"><h3>Highest median NO₂</h3><div id="survey-worst-list" class="performance-list"></div></div>
-          <div class="performance-group performance-best"><h3>Largest improvements</h3><div id="survey-improved-list" class="performance-list"></div></div>
-          <div class="performance-group performance-worst"><h3>Largest deteriorations</h3><div id="survey-deteriorated-list" class="performance-list"></div></div>
+          <div class="performance-group performance-best"><div class="survey-performance-heading"><h3>Lowest median NO₂</h3><button class="survey-group-button" type="button" data-group-id="survey-best-list" aria-pressed="false" aria-label="Select all three lowest median no₂ surveys on chart and list">Select all three</button></div><div id="survey-best-list" class="performance-list"></div></div>
+          <div class="performance-group performance-worst"><div class="survey-performance-heading"><h3>Highest median NO₂</h3><button class="survey-group-button" type="button" data-group-id="survey-worst-list" aria-pressed="false" aria-label="Select all three highest median no₂ surveys on chart and list">Select all three</button></div><div id="survey-worst-list" class="performance-list"></div></div>
+          <div class="performance-group performance-best"><div class="survey-performance-heading"><h3>Largest improvements</h3><button class="survey-group-button" type="button" data-group-id="survey-improved-list" aria-pressed="false" aria-label="Select all three largest improvements surveys on chart and list">Select all three</button></div><div id="survey-improved-list" class="performance-list"></div></div>
+          <div class="performance-group performance-worst"><div class="survey-performance-heading"><h3>Largest deteriorations</h3><button class="survey-group-button" type="button" data-group-id="survey-deteriorated-list" aria-pressed="false" aria-label="Select all three largest deteriorations surveys on chart and list">Select all three</button></div><div id="survey-deteriorated-list" class="performance-list"></div></div>
         </div>
         <p class="comparison-footnote">Only verified rounds with valid outdoor results are included. Medians compare different rounds, whose site coverage may vary; changes are relative to the previous verified round. Select an individual survey to update the map, or select all three in a category to highlight them together in the chart and survey-round table. The map continues to display one survey at a time.</p>
       </div>
