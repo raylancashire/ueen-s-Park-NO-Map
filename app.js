@@ -628,18 +628,7 @@ function renderSiteHistoryChart(siteRef = null) {
         pointRadius: 0,
         pointHoverRadius: 0,
         fill: false
-      }, ...(medianTrend ? [{
-        label: 'Long-term median trend',
-        data: medianTrend.values,
-        borderColor: '#0f766e',
-        borderWidth: 2.5,
-        borderDash: [8, 5],
-        pointRadius: 0,
-        pointHoverRadius: 0,
-        tension: 0,
-        fill: false,
-        order: 2
-      }] : [])]
+      }]
     },
     options: {
       responsive: true,
@@ -829,7 +818,18 @@ function renderSurveyTrendAnalysis() {
         pointHoverRadius: 7,
         tension: 0.18,
         fill: false
-      }]
+      }, ...(medianTrend ? [{
+        label: 'Long-term median trend',
+        data: medianTrend.values,
+        borderColor: '#0f766e',
+        borderWidth: 2.5,
+        borderDash: [8, 5],
+        pointRadius: 0,
+        pointHoverRadius: 0,
+        tension: 0,
+        fill: false,
+        order: 2
+      }] : [])]
     },
     options: {
       responsive: true,
