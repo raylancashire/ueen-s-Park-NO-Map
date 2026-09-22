@@ -45,7 +45,9 @@ const els = {
   surveyTrendToggle: document.getElementById('survey-trend-toggle'),
   surveyTrendPanel: document.getElementById('survey-trend-panel'),
   surveyTrendSummary: document.getElementById('survey-trend-summary'),
-  surveyTrendTableBody: document.getElementById('survey-trend-table-body')
+  surveyTrendTableBody: document.getElementById('survey-trend-table-body'),
+  surveyPerformanceToggle: document.getElementById('survey-performance-toggle'),
+  surveyPerformancePanel: document.getElementById('survey-performance-panel')
 };
 
 let sites = [];
@@ -854,6 +856,85 @@ function setupSurveyTrendAnalysis() {
   });
 }
 
+
+// Separate, optional survey rankings panel; no changes to map or data loading.
+function surveyPerformanceRows() {
+  let previous = null;
+  return surveys.map((survey, index) => {
+    const stats = surveyNetworkStats(survey);
+    if (!stats) return null;
+    const changePct = previous && previous.stats.median !== 0
+      ? 100 * (stats.median - previous.stats.median) / previous.stats.median : null;
+    const row = { survey, index, stats, changePct };
+    previous = row;
+    return row;
+  }).filter(Boolean);
+}
+
+function surveyPerformanceItem(row, rank, changeMode = false) {
+  const metric = changeMode
+    ? `${row.changePct > 0 ? '+' : ''}${formatNumber(row.changePct)}% change`
+    : `${formatNumber(row.stats.median)} µg/m³ median`;
+  const detail = changeMode
+    ? `${formatNumber(row.stats.median)} µg/m³ median · ${row.stats.count} sites`
+    : `${row.stats.count} valid outdoor sites`;
+  const selected = row.index === surveyIndex;
+  return `<button class="performance-item" type="button" data-survey-index="${row.index}" aria-current="${selected}">
+    <span class="performance-rank">${rank}</span>
+    <span class="performance-site"><strong>${row.survey.label}</strong><small>${detail}</small></span>
+    <span class="performance-metrics"><strong>${metric}</strong></span>
+  </button>`;
+}
+
+function renderSurveyPerformance() {
+  const panel = els.surveyPerformancePanel;
+  if (!panel || panel.hidden) return;
+  const rows = surveyPerformanceRows();
+  const ascending = [...rows].sort((a, b) => a.stats.median - b.stats.median);
+  const changes = rows.filter(row => row.changePct !== null);
+  const groups = [
+    ['survey-best-list', ascending.slice(0, 3), false],
+    ['survey-worst-list', [...ascending].reverse().slice(0, 3), false],
+    ['survey-improved-list', [...changes].filter(r => r.changePct < 0).sort((a, b) => a.changePct - b.changePct).slice(0, 3), true],
+    ['survey-deteriorated-list', [...changes].filter(r => r.changePct > 0).sort((a, b) => b.changePct - a.changePct).slice(0, 3), true]
+  ];
+  groups.forEach(([id, items, changeMode]) => {
+    const target = document.getElementById(id);
+    if (target) target.innerHTML = items.length
+      ? items.map((row, i) => surveyPerformanceItem(row, i + 1, changeMode)).join('')
+      : '<p>No qualifying verified surveys.</p>';
+  });
+}
+
+function setupSurveyPerformance() {
+  const panel = els.surveyPerformancePanel;
+  const toggle = els.surveyPerformanceToggle;
+  if (!panel || !toggle) return;
+  toggle.addEventListener('click', () => {
+    const opening = panel.hidden;
+    panel.hidden = !opening;
+    toggle.setAttribute('aria-expanded', String(opening));
+    toggle.textContent = `${opening ? 'Hide' : 'Show'} best & worst performing surveys`;
+    if (opening) renderSurveyPerformance();
+  });
+  panel.addEventListener('click', event => {
+    const button = event.target.closest('button[data-survey-index]');
+    if (!button) return;
+    const index = Number(button.dataset.surveyIndex);
+    if (!Number.isInteger(index) || index < 0 || index >= surveys.length) return;
+    setSurvey(index);
+    // Open the trend analysis so the chosen survey is also visible there.
+    if (els.surveyTrendPanel?.hidden) {
+      els.surveyTrendPanel.hidden = false;
+      els.surveyTrendToggle.setAttribute('aria-expanded', 'true');
+      els.surveyTrendToggle.textContent = 'Hide survey trend analysis';
+      renderSurveyTrendAnalysis();
+      requestAnimationFrame(() => surveyTrendChart?.resize());
+    }
+    els.surveyTrendTableBody?.querySelector(`tr[data-survey-index="${index}"]`)?.scrollIntoView({ block: 'nearest' });
+  });
+}
+
 function siteTrendPerformance(site) {
   const rows = surveys
     .filter(survey => survey.status === 'verified')
@@ -966,6 +1047,7 @@ function setSurvey(index) {
   renderComparisonChart();
   renderSurveyTrendAnalysis();
   renderPerformanceSummary();
+  renderSurveyPerformance();
   if (selectedSiteRef) selectSite(selectedSiteRef, false);
   else updateUrl();
 }
@@ -1007,6 +1089,7 @@ Promise.all([
   setupSiteHistoryComparison();
   setupSurveyTrendAnalysis();
   setupPerformanceSummary();
+  setupSurveyPerformance();
 
   const bounds = [];
   sites.forEach(site => {

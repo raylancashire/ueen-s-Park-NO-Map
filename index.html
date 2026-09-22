@@ -14,6 +14,10 @@
     .survey-trend-table th, .survey-trend-table td { padding: 0.7rem 0.75rem; border-bottom: 1px solid #dfe6e8; text-align: left; white-space: nowrap; }
     .survey-trend-table th { font-weight: 700; }
     .survey-trend-selected { background: rgba(24, 105, 82, 0.08); }
+    .survey-performance-section { margin-top: 1.25rem; }
+    .survey-performance-section .performance-grid { row-gap: 1.5rem; }
+    .survey-performance-section .performance-item { width: 100%; text-align: left; cursor: pointer; }
+    .survey-performance-section .performance-item[aria-current="true"] { outline: 2px solid #18704f; outline-offset: 2px; }
     .trend-improving { color: #18704f; font-weight: 700; }
     .trend-deteriorating { color: #a3362d; font-weight: 700; }
     .trend-stable { color: #5f6870; font-weight: 700; }
@@ -185,6 +189,27 @@
           </table>
         </div>
         <p class="comparison-footnote">Each survey uses valid outdoor monitoring results only. Improving means the network median is at least 5% lower than the previous verified survey; deteriorating means at least 5% higher; changes within ±5% are shown as stable.</p>
+      </div>
+    </section>
+
+
+    <section class="survey-performance-section" aria-label="Best and worst performing surveys">
+      <button id="survey-performance-toggle" class="comparison-toggle" type="button" aria-expanded="false" aria-controls="survey-performance-panel">
+        Show best &amp; worst performing surveys
+      </button>
+      <div id="survey-performance-panel" class="comparison-panel" hidden>
+        <div class="comparison-heading"><div>
+          <p class="panel-kicker">Verified outdoor monitoring rounds</p>
+          <h2>Best &amp; worst performing surveys</h2>
+          <p>Compare the three lowest and highest network median NO₂ concentrations, plus the largest changes from the previous verified survey.</p>
+        </div></div>
+        <div class="performance-grid">
+          <div class="performance-group performance-best"><h3>Lowest median NO₂</h3><div id="survey-best-list" class="performance-list"></div></div>
+          <div class="performance-group performance-worst"><h3>Highest median NO₂</h3><div id="survey-worst-list" class="performance-list"></div></div>
+          <div class="performance-group performance-best"><h3>Largest improvements</h3><div id="survey-improved-list" class="performance-list"></div></div>
+          <div class="performance-group performance-worst"><h3>Largest deteriorations</h3><div id="survey-deteriorated-list" class="performance-list"></div></div>
+        </div>
+        <p class="comparison-footnote">Only verified rounds with valid outdoor results are included. Medians compare different rounds, whose site coverage may vary; changes are relative to the previous verified round. Select a survey to update the map and highlight it in Survey Trend Analysis.</p>
       </div>
     </section>
 
