@@ -417,7 +417,7 @@ function renderComparisonChart() {
       ctx.textAlign = 'center';
       ctx.textBaseline = 'bottom';
       ctx.fillStyle = '#202020';
-      ctx.fillText('40 µg/m³ legal limit', x, chartArea.top - 4);
+      ctx.fillText('40 µg/m³ legal limit', x, chartArea.top - 8);
       ctx.restore();
     }
   };
@@ -442,7 +442,7 @@ function renderComparisonChart() {
       indexAxis: 'y',
       responsive: true,
       maintainAspectRatio: false,
-      layout: { padding: { right: 8 } },
+      layout: { padding: { top: 34, right: 8 } },
       interaction: { mode: 'nearest', intersect: true },
       plugins: {
         legend: { display: false },
